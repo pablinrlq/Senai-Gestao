@@ -6,7 +6,7 @@ import * as path from "path";
 const STORAGE_BUCKET =
   process.env.SUPABASE_STORAGE_BUCKET ||
   process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-  "";
+  "atestados"; // default bucket name
 
 export async function uploadImageToStorage(
   file: File,

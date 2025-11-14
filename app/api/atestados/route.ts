@@ -272,29 +272,38 @@ export const POST = withFirebaseAdmin(async (req, db) => {
     const imageFile = formData.get("imagem_atestado");
     if (imageFile && imageFile instanceof File) {
       try {
-        if (process.env.HAS_STORAGE_BUCKET === "true") {
-          const uploadResult = await uploadImageToStorage(
-            imageFile,
-            authResult.uid,
-            "atestados"
-          );
-          imageUrl = uploadResult.url;
-          imagePath = uploadResult.path;
-        } else {
-          const uploadResult = await uploadImageToPublicFolder(
-            imageFile,
-            authResult.uid,
-            "atestados"
-          );
-          imageUrl = uploadResult.url;
-          imagePath = uploadResult.path;
-        }
-      } catch (uploadError) {
-        console.error("Erro ao fazer upload da imagem:", uploadError);
-        return NextResponse.json(
-          { error: "Falha ao enviar imagem do atestado" },
-          { status: 500 }
+        // Try uploading to Supabase Storage first (bucket defaults to 'atestados')
+        const uploadResult = await uploadImageToStorage(
+          imageFile,
+          authResult.uid,
+          "atestados"
         );
+        imageUrl = uploadResult.url;
+        imagePath = uploadResult.path;
+      } catch (uploadError) {
+        console.error(
+          "Erro ao enviar imagem para Supabase Storage:",
+          uploadError
+        );
+        // Fallback: write to public/uploads folder so the app still works offline
+        try {
+          const fallback = await uploadImageToPublicFolder(
+            imageFile,
+            authResult.uid,
+            "atestados"
+          );
+          imageUrl = fallback.url;
+          imagePath = fallback.path;
+        } catch (fallbackErr) {
+          console.error(
+            "Erro no fallback de upload para pasta pública:",
+            fallbackErr
+          );
+          return NextResponse.json(
+            { error: "Falha ao enviar imagem do atestado" },
+            { status: 500 }
+          );
+        }
       }
     }
 
