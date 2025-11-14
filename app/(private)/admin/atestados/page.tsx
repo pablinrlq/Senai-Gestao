@@ -12,6 +12,7 @@ import {
   Eye,
   User,
   FileText,
+  Download,
 } from "lucide-react";
 
 import {
@@ -207,6 +208,55 @@ export default function AdminAtestadosPage() {
     }
   };
 
+  const toYMD = (v?: string | null) => {
+    if (!v) return "unknown";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v as string;
+    const d = new Date(v as string);
+    if (isNaN(d.getTime())) return "unknown";
+    return d.toISOString().slice(0, 10);
+  };
+
+  const downloadAtestado = async (atestado: AtestadoData) => {
+    if (!atestado.imagem) {
+      toast.error("Imagem do atestado não disponível para download");
+      return;
+    }
+
+    try {
+      const res = await fetch(atestado.imagem);
+      if (!res.ok) throw new Error("Falha ao baixar imagem");
+      const blob = await res.blob();
+
+      const inicio = toYMD(atestado.data_inicio);
+      const fim = toYMD(atestado.data_fim);
+      const nomeOrig = (atestado.usuario?.nome || profile?.nome || "atestado")
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9_\-]/g, "");
+
+      let ext = "jpg";
+      if (blob.type) {
+        const parts = blob.type.split("/");
+        if (parts[1])
+          ext = parts[1].replace("jpeg", "jpg").replace("svg+xml", "svg");
+      }
+
+      const fileName = `${inicio}_${fim}_${nomeOrig}.${ext}`;
+
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erro ao baixar atestado:", err);
+      toast.error("Erro ao baixar atestado");
+    }
+  };
+
   // using shared formatDate util to ensure consistent local-date parsing
 
   if (!profile || profile.tipo_usuario !== "administrador") {
@@ -364,6 +414,17 @@ export default function AdminAtestadosPage() {
                         </div>
                       </DialogContent>
                     </Dialog>
+
+                    {atestado.imagem && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadAtestado(atestado)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Baixar
+                      </Button>
+                    )}
 
                     {atestado.status === "pendente" && (
                       <>
