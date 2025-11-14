@@ -1,12 +1,24 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { z } from "zod";
@@ -14,20 +26,24 @@ import { UserCog, ArrowLeft, Shield } from "lucide-react";
 import Link from "next/link";
 import { checkAuthStatus } from "@/lib/utils/auth";
 
-const adminCreationSchema = z.object({
-  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("Email deve ter um formato válido"),
-  ra: z.string().min(5, "RA deve ter pelo menos 5 caracteres"),
-  telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
-  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-  confirmarSenha: z.string(),
-  cargo: z.enum(['ADMINISTRADOR', 'FUNCIONARIO'], {
-    errorMap: () => ({ message: 'Cargo deve ser ADMINISTRADOR ou FUNCIONARIO' })
-  }),
-}).refine((data) => data.senha === data.confirmarSenha, {
-  message: "Senhas não coincidem",
-  path: ["confirmarSenha"],
-});
+const adminCreationSchema = z
+  .object({
+    nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+    email: z.string().email("Email deve ter um formato válido"),
+    ra: z.string().min(5, "RA deve ter pelo menos 5 caracteres"),
+    telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+    senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    confirmarSenha: z.string(),
+    cargo: z.enum(["ADMINISTRADOR", "FUNCIONARIO"], {
+      errorMap: () => ({
+        message: "Cargo deve ser ADMINISTRADOR ou FUNCIONARIO",
+      }),
+    }),
+  })
+  .refine((data) => data.senha === data.confirmarSenha, {
+    message: "Senhas não coincidem",
+    path: ["confirmarSenha"],
+  });
 
 const CreateAdmin = () => {
   const router = useRouter();
@@ -42,8 +58,13 @@ const CreateAdmin = () => {
     const checkAuth = async () => {
       try {
         const authStatus = await checkAuthStatus();
-        if (!authStatus.isAuthenticated || authStatus.user?.cargo !== 'ADMINISTRADOR') {
-          toast.error("Acesso negado. Apenas administradores podem criar novos usuários.");
+        if (
+          !authStatus.isAuthenticated ||
+          authStatus.user?.cargo !== "ADMINISTRADOR"
+        ) {
+          toast.error(
+            "Acesso negado. Apenas administradores podem criar novos usuários."
+          );
           router.push("/auth/login");
           return;
         }
@@ -82,16 +103,15 @@ const CreateAdmin = () => {
         return;
       }
 
-
       // Create user data for API
       const createUserData = {
         ...validationResult.data,
       };
 
-      const response = await fetch('/api/admin/create-user', {
-        method: 'POST',
+      const response = await fetch("/api/admin/create-user", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(createUserData),
       });
@@ -99,13 +119,17 @@ const CreateAdmin = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Erro ao criar usuário');
+        throw new Error(result.error || "Erro ao criar usuário");
       }
 
       toast.success("Usuário criado com sucesso!");
 
       // Reset form
       (e.target as HTMLFormElement).reset();
+      // Redirect back to admin panel after a short delay so toast is visible
+      setTimeout(() => {
+        router.push("/admin");
+      }, 600);
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes("já existe")) {
@@ -128,7 +152,9 @@ const CreateAdmin = () => {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-sm text-muted-foreground">Verificando permissões...</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Verificando permissões...
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -208,7 +234,13 @@ const CreateAdmin = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="admin-cargo">Cargo *</Label>
-                <Select value={cargo} onValueChange={setCargo} name="cargo" required disabled={loading}>
+                <Select
+                  value={cargo}
+                  onValueChange={setCargo}
+                  name="cargo"
+                  required
+                  disabled={loading}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o cargo" />
                   </SelectTrigger>
@@ -260,7 +292,12 @@ const CreateAdmin = () => {
                 {loading ? "Criando usuário..." : "Criar Usuário"}
               </Button>
               <Link href="/dashboard" className="flex-1">
-                <Button type="button" variant="outline" className="w-full" disabled={loading}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={loading}
+                >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Voltar ao Dashboard
                 </Button>
