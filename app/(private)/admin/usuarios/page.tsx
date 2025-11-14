@@ -155,17 +155,18 @@ export default function Usuarios() {
   }, [searchTerm, usuarios]);
 
   const getTipoBadge = (tipo: string) => {
-    const variants: Record<
-      string,
-      { variant: "default" | "secondary" | "destructive"; label: string }
-    > = {
-      aluno: { variant: "default", label: "Aluno" },
-      professor: { variant: "secondary", label: "Professor" },
-      administrador: { variant: "destructive", label: "Administrador" },
-    };
+    const t = (tipo || "").toString().toLowerCase();
 
-    const { variant, label } = variants[tipo] || variants.aluno;
-    return <Badge variant={variant}>{label}</Badge>;
+    if (t === "administrador" || t === "admin") {
+      return <Badge variant="destructive">Administrador</Badge>;
+    }
+
+    if (t === "funcionario" || t === "funcionário" || t === "func") {
+      return <Badge variant="secondary">Funcionário</Badge>;
+    }
+
+    // default mapping: 'usuario' or missing -> Aluno
+    return <Badge variant="default">Aluno</Badge>;
   };
 
   const getStatusBadge = (status: string) => {

@@ -22,7 +22,7 @@ import {
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { z } from "zod";
-import { UserCog, ArrowLeft, Shield } from "lucide-react";
+import { UserCog, ArrowLeft, Shield, User } from "lucide-react";
 import Link from "next/link";
 import { checkAuthStatus } from "@/lib/utils/auth";
 
@@ -34,9 +34,9 @@ const adminCreationSchema = z
     telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
     senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
     confirmarSenha: z.string(),
-    cargo: z.enum(["ADMINISTRADOR", "FUNCIONARIO"], {
+    cargo: z.enum(["ADMINISTRADOR", "FUNCIONARIO", "USUARIO"], {
       errorMap: () => ({
-        message: "Cargo deve ser ADMINISTRADOR ou FUNCIONARIO",
+        message: "Cargo inválido (ADMINISTRADOR, FUNCIONARIO ou USUARIO)",
       }),
     }),
   })
@@ -255,6 +255,12 @@ const CreateAdmin = () => {
                       <div className="flex items-center">
                         <UserCog className="h-4 w-4 mr-2" />
                         Funcionário
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="USUARIO">
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        Aluno
                       </div>
                     </SelectItem>
                   </SelectContent>
