@@ -343,12 +343,6 @@ export default function Usuarios() {
                                 RA: {usuario.ra_aluno}
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Cargo:{" "}
-                              <span className="font-medium">
-                                {getTipoLabel(usuario.tipo_usuario)}
-                              </span>
-                            </p>
                             {usuario.curso && (
                               <p className="text-xs text-muted-foreground">
                                 Curso:{" "}

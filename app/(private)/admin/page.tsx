@@ -548,12 +548,6 @@ export default function AdminDashboard() {
                                 RA: {usuario.ra_aluno}
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Cargo:{" "}
-                              <span className="font-medium">
-                                {usuario.tipo_usuario}
-                              </span>
-                            </p>
                             {usuario.curso && (
                               <p className="text-xs text-muted-foreground">
                                 Curso:{" "}
