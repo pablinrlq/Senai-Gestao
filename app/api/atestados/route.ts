@@ -239,16 +239,19 @@ export const POST = withFirebaseAdmin(async (req, db) => {
 
     const { data: createdData, error } = await safeFirestoreOperation(
       async () => {
-        const docRef = await db.collection("atestados").add({
+        // insert using snake_case column names expected by Postgres/Supabase
+        const payload = {
           id_usuario: authResult.uid,
-          data_inicio: Timestamp.fromDate(new Date(validatedData.data_inicio)),
-          data_fim: Timestamp.fromDate(new Date(validatedData.data_fim)),
+          data_inicio: new Date(validatedData.data_inicio).toISOString(),
+          data_fim: new Date(validatedData.data_fim).toISOString(),
           motivo: validatedData.motivo,
           imagem_atestado: imageUrl,
           imagem_path: imagePath,
           status: validatedData.status,
-          createdAt: Timestamp.fromDate(new Date()),
-        });
+          created_at: new Date().toISOString(),
+        } as any;
+
+        const docRef = await db.collection("atestados").add(payload);
         return { id: docRef.id };
       },
       "Falha ao criar atestado"
@@ -323,13 +326,14 @@ export const PATCH = withFirebaseAdmin(async (req, db) => {
     }
 
     const { error } = await safeFirestoreOperation(async () => {
+      // update using snake_case column name
       await db
         .collection("atestados")
         .doc(atestadoId)
         .update({
           status: validationResult.data.status,
-          updatedAt: Timestamp.fromDate(new Date()),
-        });
+          updated_at: new Date().toISOString(),
+        } as any);
     }, "Falha ao atualizar status do atestado");
 
     if (error) return NextResponse.json({ error }, { status: 500 });
