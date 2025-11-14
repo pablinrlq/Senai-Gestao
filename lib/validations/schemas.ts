@@ -30,6 +30,13 @@ export const CreateUserSchema = UserSchema.omit({
     .default("USUARIO"),
   telefone: z.string().optional().default(""),
   metadata: z.record(z.any()).optional(), // For additional user information
+  curso: z.string().optional().nullable(),
+  status: z
+    .enum(["ativo", "inativo"], {
+      errorMap: () => ({ message: "Status deve ser 'ativo' ou 'inativo'" }),
+    })
+    .optional()
+    .default("ativo"),
 });
 
 export const UpdateUserSchema = CreateUserSchema.partial().extend({

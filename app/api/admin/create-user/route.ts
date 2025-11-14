@@ -59,6 +59,9 @@ export const POST = withFirebaseAdmin(async (req, db) => {
         ...(validatedData.telefone ? { telefone: validatedData.telefone } : {}),
         ra: validatedData.ra,
         senha: await hashPassword(validatedData.senha),
+        // set status explicitly (defaulted by schema to 'ativo' if not provided)
+        status: validatedData.status || "ativo",
+        ...(validatedData.curso ? { curso: validatedData.curso } : {}),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // Store any additional metadata

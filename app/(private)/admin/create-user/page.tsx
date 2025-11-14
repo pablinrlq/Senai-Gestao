@@ -118,9 +118,11 @@ const CreateAdmin = () => {
       }
 
       // Create user data for API
-      const createUserData = {
-        ...validationResult.data,
-      };
+      const createUserData: any = { ...validationResult.data };
+      // If curso is empty string or null, omit it so DB will keep NULL
+      if (!createUserData.curso) delete createUserData.curso;
+      // Ensure status is explicit
+      createUserData.status = createUserData.status || "ativo";
 
       const response = await fetch("/api/admin/create-user", {
         method: "POST",

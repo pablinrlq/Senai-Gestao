@@ -55,6 +55,8 @@ interface Usuario {
   tipo_usuario: string;
   ra_aluno: string | null;
   created_at: string;
+  status?: string;
+  curso?: string | null;
 }
 
 interface Atestado {
@@ -185,6 +187,37 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching usuarios:", error);
       toast.error("Erro ao carregar usuários");
+    }
+  };
+
+  
+
+  const performToggleUserStatus = async (usuarioId: string, currentStatus?: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Não autorizado");
+      return;
+    }
+
+    const newStatus = currentStatus === "inativo" ? "ativo" : "inativo";
+
+    try {
+      const res = await fetch(`/api/admin/usuarios/${usuarioId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Falha ao atualizar status");
+      toast.success(body.message || "Status atualizado");
+      fetchUsuarios();
+    } catch (err) {
+      console.error("Error toggling user status:", err);
+      toast.error("Erro ao atualizar status do usuário");
     }
   };
 
@@ -339,20 +372,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const getUserStatusBadge = (status: string) => {
-    switch (status) {
-      case "aprovado":
-        return (
-          <Badge variant="default" className="bg-green-500">
-            Aprovado
-          </Badge>
-        );
-      case "rejeitado":
-        return <Badge variant="destructive">Rejeitado</Badge>;
-      default:
-        return <Badge variant="secondary">Pendente</Badge>;
-    }
-  };
+  
 
   // use shared date formatter (handles YYYY-MM-DD as local date)
 
@@ -478,8 +498,43 @@ export default function AdminDashboard() {
                                 RA: {usuario.ra_aluno}
                               </p>
                             )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Cargo:{" "}
+                              <span className="font-medium">
+                                {usuario.tipo_usuario}
+                              </span>
+                            </p>
+                            {usuario.curso && (
+                              <p className="text-xs text-muted-foreground">
+                                Curso:{" "}
+                                <span className="font-medium">
+                                  {usuario.curso}
+                                </span>
+                              </p>
+                            )}
                           </div>
-                          {getTipoBadge(usuario.tipo_usuario)}
+                          <div className="flex flex-col items-end gap-2">
+                            {getTipoBadge(usuario.tipo_usuario)}
+                            <div>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    {usuario.status === "inativo" ? "Ativar" : "Inativar"}
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>{usuario.status === "inativo" ? "Ativar usuário" : "Inativar usuário"}</DialogTitle>
+                                    <DialogDescription>{`Confirma ${usuario.status === 'inativo' ? 'ativar' : 'inativar'} o usuário ${usuario.nome}?`}</DialogDescription>
+                                  </DialogHeader>
+                                  <div className="flex justify-end gap-2 mt-4">
+                                    <Button variant="outline">Cancelar</Button>
+                                    <Button onClick={() => performToggleUserStatus(usuario.id, usuario.status)}>{usuario.status === "inativo" ? "Confirmar Ativação" : "Confirmar Inativação"}</Button>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))
