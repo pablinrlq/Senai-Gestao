@@ -39,11 +39,20 @@ const adminCreationSchema = z
         message: "Cargo inválido (ADMINISTRADOR, FUNCIONARIO ou USUARIO)",
       }),
     }),
+    curso: z.string().optional(),
   })
   .refine((data) => data.senha === data.confirmarSenha, {
     message: "Senhas não coincidem",
     path: ["confirmarSenha"],
-  });
+  })
+  .refine(
+    (data) =>
+      !(data.cargo === "USUARIO") || (data.curso && data.curso.length > 0),
+    {
+      message: "Curso é obrigatório para alunos",
+      path: ["curso"],
+    }
+  );
 
 const CreateAdmin = () => {
   const router = useRouter();
@@ -51,8 +60,12 @@ const CreateAdmin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [cargo, setCargo] = useState("");
-  const [departamento, setDepartamento] = useState("");
-  const [nivelAcesso, setNivelAcesso] = useState("");
+  const [curso, setCurso] = useState("");
+
+  useEffect(() => {
+    // Clear curso when role is not aluno
+    if (cargo !== "USUARIO") setCurso("");
+  }, [cargo]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -93,6 +106,7 @@ const CreateAdmin = () => {
       senha: formData.get("senha") as string,
       confirmarSenha: formData.get("confirmarSenha") as string,
       cargo: cargo,
+      curso: curso,
     };
 
     try {
@@ -262,6 +276,34 @@ const CreateAdmin = () => {
                         <User className="h-4 w-4 mr-2" />
                         Aluno
                       </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="admin-curso">
+                  Curso {cargo === "USUARIO" ? "*" : ""}
+                </Label>
+                <Select
+                  value={curso}
+                  onValueChange={setCurso}
+                  name="curso"
+                  required={cargo === "USUARIO"}
+                  disabled={loading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o curso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TEC_INFORMATICA">
+                      Técnico em Informática
+                    </SelectItem>
+                    <SelectItem value="TEC_MECATRONICA">
+                      Técnico em Mecatrônica
+                    </SelectItem>
+                    <SelectItem value="TEC_LOGISTICA">
+                      Técnico em Logística
                     </SelectItem>
                   </SelectContent>
                 </Select>
