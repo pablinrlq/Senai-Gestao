@@ -1,14 +1,21 @@
-'use client';
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, Search, User, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatDateForDisplay } from "@/utils/formatDate";
 
 interface Usuario {
   id: string;
@@ -41,21 +48,21 @@ export default function Usuarios() {
   const [atestados, setAtestados] = useState<Atestado[]>([]);
 
   const checkUserType = useCallback(async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       router.push("/auth/login");
       return;
     }
 
     try {
-      const response = await fetch('/api/profile', {
+      const response = await fetch("/api/profile", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to check user type');
+        throw new Error("Failed to check user type");
       }
 
       const data = await response.json();
@@ -69,20 +76,20 @@ export default function Usuarios() {
       setIsAdmin(true);
       fetchUsuarios();
     } catch (error) {
-      console.error('Error checking user type:', error);
+      console.error("Error checking user type:", error);
       toast.error("Erro ao verificar permissões");
       router.push("/dashboard");
     }
   }, [router]);
 
   const fetchUsuarios = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
-      const response = await fetch('/api/usuarios', {
+      const response = await fetch("/api/usuarios", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -94,7 +101,7 @@ export default function Usuarios() {
         toast.error("Erro ao carregar usuários");
       }
     } catch (error) {
-      console.error('Error fetching usuarios:', error);
+      console.error("Error fetching usuarios:", error);
       toast.error("Erro ao carregar usuários");
     } finally {
       setLoading(false);
@@ -103,24 +110,27 @@ export default function Usuarios() {
 
   const fetchAtestadosUsuario = async (usuarioId: string) => {
     setSelectedUserId(usuarioId);
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
       const response = await fetch(`/api/atestados?userId=${usuarioId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setAtestados(data.atestados || []);
+        // API may return atestados under `data` (server uses { success: true, data: [...] })
+        // or under `atestados` in some older responses. Support both.
+        const atestadosArray = data.data || data.atestados || [];
+        setAtestados(atestadosArray);
       } else {
         toast.error("Erro ao carregar atestados");
       }
     } catch (error) {
-      console.error('Error fetching user atestados:', error);
+      console.error("Error fetching user atestados:", error);
       toast.error("Erro ao carregar atestados");
     }
   };
@@ -137,14 +147,18 @@ export default function Usuarios() {
         (usuario) =>
           usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
           usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (usuario.ra_aluno && usuario.ra_aluno.toLowerCase().includes(searchTerm.toLowerCase()))
+          (usuario.ra_aluno &&
+            usuario.ra_aluno.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredUsuarios(filtered);
     }
   }, [searchTerm, usuarios]);
 
   const getTipoBadge = (tipo: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "destructive", label: string }> = {
+    const variants: Record<
+      string,
+      { variant: "default" | "secondary" | "destructive"; label: string }
+    > = {
       aluno: { variant: "default", label: "Aluno" },
       professor: { variant: "secondary", label: "Professor" },
       administrador: { variant: "destructive", label: "Administrador" },
@@ -157,13 +171,19 @@ export default function Usuarios() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "aprovado":
-        return <Badge variant="default" className="bg-green-500">Aprovado</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-500">
+            Aprovado
+          </Badge>
+        );
       case "rejeitado":
         return <Badge variant="destructive">Rejeitado</Badge>;
       default:
         return <Badge variant="secondary">Pendente</Badge>;
     }
   };
+
+  // use shared date formatter from utils to ensure consistent local-date handling
 
   if (loading) {
     return (
@@ -179,7 +199,9 @@ export default function Usuarios() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Acesso Negado</CardTitle>
-            <CardDescription>Você não tem permissão para acessar esta página</CardDescription>
+            <CardDescription>
+              Você não tem permissão para acessar esta página
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => router.push("/dashboard")}>
@@ -195,7 +217,11 @@ export default function Usuarios() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card shadow-sm">
         <div className="container mx-auto flex items-center gap-4 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/dashboard")}
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Logo />
@@ -204,8 +230,12 @@ export default function Usuarios() {
 
       <main className="container mx-auto p-4 md:p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Gerenciar Usuários</h1>
-          <p className="text-muted-foreground">Busque usuários e visualize seus atestados</p>
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            Gerenciar Usuários
+          </h1>
+          <p className="text-muted-foreground">
+            Busque usuários e visualize seus atestados
+          </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -216,7 +246,9 @@ export default function Usuarios() {
                 <User className="h-5 w-5" />
                 Lista de Usuários
               </CardTitle>
-              <CardDescription>Busque e selecione usuários para ver detalhes</CardDescription>
+              <CardDescription>
+                Busque e selecione usuários para ver detalhes
+              </CardDescription>
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
@@ -230,22 +262,31 @@ export default function Usuarios() {
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {filteredUsuarios.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
-                    {searchTerm ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}
+                    {searchTerm
+                      ? "Nenhum usuário encontrado"
+                      : "Nenhum usuário cadastrado"}
                   </p>
                 ) : (
                   filteredUsuarios.map((usuario) => (
                     <div
                       key={usuario.id}
-                      className={`border rounded-lg p-3 cursor-pointer transition-colors hover:bg-muted/50 ${selectedUserId === usuario.id ? "bg-muted border-primary" : ""
-                        }`}
+                      className={`border rounded-lg p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                        selectedUserId === usuario.id
+                          ? "bg-muted border-primary"
+                          : ""
+                      }`}
                       onClick={() => fetchAtestadosUsuario(usuario.id)}
                     >
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{usuario.nome}</p>
-                          <p className="text-sm text-muted-foreground">{usuario.email}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {usuario.email}
+                          </p>
                           {usuario.ra_aluno && (
-                            <p className="text-xs text-muted-foreground">RA: {usuario.ra_aluno}</p>
+                            <p className="text-xs text-muted-foreground">
+                              RA: {usuario.ra_aluno}
+                            </p>
                           )}
                         </div>
                         {getTipoBadge(usuario.tipo_usuario)}
@@ -267,8 +308,7 @@ export default function Usuarios() {
               <CardDescription>
                 {selectedUserId
                   ? `Atestados do usuário selecionado`
-                  : "Selecione um usuário para ver seus atestados"
-                }
+                  : "Selecione um usuário para ver seus atestados"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -289,13 +329,13 @@ export default function Usuarios() {
                     >
                       <div className="flex items-center justify-between">
                         <p className="font-medium">
-                          Falta: {new Date(atestado.data_falta).toLocaleDateString('pt-BR')}
+                          Falta: {formatDateForDisplay(atestado.data_falta)}
                         </p>
                         {getStatusBadge(atestado.status)}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Período: {new Date(atestado.data_inicio).toLocaleDateString('pt-BR')} até{' '}
-                        {new Date(atestado.data_fim).toLocaleDateString('pt-BR')}
+                        Período: {formatDateForDisplay(atestado.data_inicio)}{" "}
+                        até {formatDateForDisplay(atestado.data_fim)}
                       </p>
                       {atestado.motivo && (
                         <p className="text-sm">{atestado.motivo}</p>
@@ -321,4 +361,4 @@ export default function Usuarios() {
       </main>
     </div>
   );
-};
+}

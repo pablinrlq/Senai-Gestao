@@ -1,17 +1,21 @@
-import React from 'react';
-import { CreateAtestadoForm } from '@/components/CreateAtestadoForm';
-import { useAtestadosWithFormData } from '@/hooks/use-api';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { CreateAtestadoForm } from "@/components/CreateAtestadoForm";
+import { useAtestadosWithFormData } from "@/hooks/use-api";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { formatDate } from "@/utils/formatDate";
 
 export default function AtestadosWithTanStackQuery() {
   const router = useRouter();
-  const { atestados, loading, error, isAddingAtestado } = useAtestadosWithFormData();
+  const { atestados, loading, error, isAddingAtestado } =
+    useAtestadosWithFormData();
+
+  // use shared formatDate util
 
   const handleSuccess = () => {
-    console.log('Atestado created successfully!');
+    console.log("Atestado created successfully!");
     // The list will automatically update thanks to TanStack Query cache invalidation
   };
 
@@ -52,7 +56,7 @@ export default function AtestadosWithTanStackQuery() {
             onClick={() => router.refresh()}
             disabled={loading}
           >
-            {loading ? 'Carregando...' : 'Atualizar'}
+            {loading ? "Carregando..." : "Atualizar"}
           </Button>
         </div>
 
@@ -73,14 +77,14 @@ export default function AtestadosWithTanStackQuery() {
               <Card key={atestado.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">
-                      {atestado.motivo}
-                    </CardTitle>
+                    <CardTitle className="text-lg">{atestado.motivo}</CardTitle>
                     <Badge
                       variant={
-                        atestado.status === 'aprovado' ? 'default' :
-                          atestado.status === 'rejeitado' ? 'destructive' :
-                            'secondary'
+                        atestado.status === "aprovado"
+                          ? "default"
+                          : atestado.status === "rejeitado"
+                          ? "destructive"
+                          : "secondary"
                       }
                     >
                       {atestado.status}
@@ -90,10 +94,11 @@ export default function AtestadosWithTanStackQuery() {
                 <CardContent>
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">
-                      <strong>Início:</strong> {new Date(atestado.data_inicio).toLocaleDateString()}
+                      <strong>Início:</strong>{" "}
+                      {formatDate(atestado.data_inicio)}
                     </p>
                     <p className="text-sm text-gray-600">
-                      <strong>Fim:</strong> {new Date(atestado.data_fim).toLocaleDateString()}
+                      <strong>Fim:</strong> {formatDate(atestado.data_fim)}
                     </p>
                     {atestado.imagem_atestado && (
                       <div className="mt-4">

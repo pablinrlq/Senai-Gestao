@@ -1,12 +1,18 @@
-
-'use client';
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
+import { formatDate } from "@/utils/formatDate";
 import { ArrowLeft, UserCircle, Mail, IdCard, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -24,7 +30,7 @@ export default function Perfil() {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     if (!token) {
       router.push("/auth/login");
@@ -32,23 +38,23 @@ export default function Perfil() {
     }
 
     try {
-      const response = await fetch('/api/profile', {
+      const response = await fetch("/api/profile", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch profile');
+        throw new Error("Failed to fetch profile");
       }
 
       const data = await response.json();
       setProfile(data.user);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
       toast.error("Erro ao carregar perfil");
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       router.push("/auth/login");
     } finally {
       setLoading(false);
@@ -68,7 +74,10 @@ export default function Perfil() {
   }
 
   const getTipoBadge = (tipo: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "destructive", label: string }> = {
+    const variants: Record<
+      string,
+      { variant: "default" | "secondary" | "destructive"; label: string }
+    > = {
       aluno: { variant: "default", label: "Aluno" },
       professor: { variant: "secondary", label: "Professor" },
       administrador: { variant: "destructive", label: "Administrador" },
@@ -82,7 +91,11 @@ export default function Perfil() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card shadow-sm">
         <div className="container mx-auto flex items-center gap-4 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/dashboard")}
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Logo />
@@ -104,9 +117,8 @@ export default function Perfil() {
                   <CardTitle className="text-2xl">{profile?.nome}</CardTitle>
                   <CardDescription>
                     {profile?.created_at
-                      ? `Membro desde ${new Date(profile.created_at).toLocaleDateString()}`
-                      : "Perfil do sistema"
-                    }
+                      ? `Membro desde ${formatDate(profile.created_at)}`
+                      : "Perfil do sistema"}
                   </CardDescription>
                 </div>
                 {profile && getTipoBadge(profile.tipo_usuario)}
@@ -118,7 +130,9 @@ export default function Perfil() {
                   <Mail className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Email</p>
-                    <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {profile?.email}
+                    </p>
                   </div>
                 </div>
 
@@ -126,7 +140,9 @@ export default function Perfil() {
                   <Shield className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Tipo de Usuário</p>
-                    <p className="text-sm text-muted-foreground capitalize">{profile?.tipo_usuario}</p>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {profile?.tipo_usuario}
+                    </p>
                   </div>
                 </div>
 
@@ -135,14 +151,19 @@ export default function Perfil() {
                     <IdCard className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">RA</p>
-                      <p className="text-sm text-muted-foreground">{profile.ra_aluno}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {profile.ra_aluno}
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
 
               <div className="pt-4 border-t">
-                <Button variant="outline" onClick={() => router.push("/dashboard")}>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/dashboard")}
+                >
                   Voltar ao Dashboard
                 </Button>
               </div>
@@ -152,4 +173,4 @@ export default function Perfil() {
       </main>
     </div>
   );
-};
+}

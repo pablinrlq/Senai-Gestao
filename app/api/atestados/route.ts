@@ -122,23 +122,34 @@ export const GET = withFirebaseAdmin(async (req, db) => {
     const atestados = atestadosSnapshot.docs.map((doc) => {
       const data = doc.data();
       const usuario = usuarios.get(data.id_usuario);
-      const toDateSafe = (v: any) => {
+
+      // Return date fields as strings when they are stored as strings (YYYY-MM-DD)
+      // to avoid timezone conversions on the client. If the stored value is a
+      // Firestore Timestamp/object, convert to ISO string so client can handle it.
+      const toDateOrString = (v: any) => {
         if (!v) return null;
-        if (typeof v === "string" || v instanceof String)
-          return new Date(v as string);
-        if (v?.toDate) return v.toDate();
-        return new Date(v as any);
+        if (typeof v === "string" || v instanceof String) return String(v);
+        if (v?.toDate) return v.toDate().toISOString();
+        // fallback: try to construct a Date and return ISO string
+        try {
+          const dt = new Date(v as any);
+          if (isNaN(dt.getTime())) return null;
+          return dt.toISOString();
+        } catch {
+          return null;
+        }
       };
+
       return {
         id: doc.id,
         motivo: data.motivo,
         imagem: data.imagemAtestado || "",
         status: data.status || "pendente",
-        data_inicio: toDateSafe(data.dataInicio),
-        data_fim: toDateSafe(data.dataFim),
+        data_inicio: toDateOrString(data.dataInicio),
+        data_fim: toDateOrString(data.dataFim),
         usuario: usuario ?? null,
         // manter compatibilidade com frontend usando `createdAt`
-        createdAt: toDateSafe(data.created_at ?? data.createdAt),
+        createdAt: toDateOrString(data.created_at ?? data.createdAt),
       };
     });
 
@@ -249,8 +260,10 @@ export const POST = withFirebaseAdmin(async (req, db) => {
         // insert using snake_case column names expected by Postgres/Supabase
         const payload = {
           id_usuario: authResult.uid,
-          data_inicio: new Date(validatedData.data_inicio).toISOString(),
-          data_fim: new Date(validatedData.data_fim).toISOString(),
+          // store the original YYYY-MM-DD string when available so clients can
+          // render the exact saved day without timezone shifting
+          data_inicio: validatedData.data_inicio,
+          data_fim: validatedData.data_fim,
           motivo: validatedData.motivo,
           imagem_atestado: imageUrl,
           imagem_path: imagePath,

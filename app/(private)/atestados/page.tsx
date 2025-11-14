@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/Logo";
+import { formatDate } from "@/utils/formatDate";
 import {
   Dialog,
   DialogContent,
@@ -161,9 +162,7 @@ export default function AtestadosPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR");
-  };
+  // use shared date formatter to avoid timezone shifts for YYYY-MM-DD
 
   if (!profile || profile.tipo_usuario === "administrador") {
     return null; // The redirect happens in fetchProfile
