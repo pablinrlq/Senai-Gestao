@@ -25,7 +25,16 @@ const studentSignupSchema = z
     email: z.string().email("Email deve ter um formato válido"),
     ra: z.string().min(5, "RA deve ter pelo menos 5 caracteres"),
     telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
-    senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    senha: z
+      .string()
+      .min(8, "Senha deve ter pelo menos 8 caracteres")
+      .regex(/[a-z]/, "Senha deve conter pelo menos uma letra minúscula")
+      .regex(/[A-Z]/, "Senha deve conter pelo menos uma letra maiúscula")
+      .regex(/\d/, "Senha deve conter pelo menos um número")
+      .regex(
+        /[!@#$%^&*(),.?":{}|<>]/,
+        "Senha deve conter pelo menos um caractere especial"
+      ),
     confirmarSenha: z.string(),
   })
   .refine((data) => data.senha === data.confirmarSenha, {
@@ -215,26 +224,32 @@ const StudentSignup = () => {
                     <SelectValue placeholder="Selecione o curso" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tecnico-informatica">
-                      Técnico em Informática
+                    <SelectItem value="tecnico-automacao">
+                      Técnico em Automação
                     </SelectItem>
-                    <SelectItem value="tecnico-eletronica">
-                      Técnico em Eletrônica
+                    <SelectItem value="tecnico-mecatronica">
+                      Técnico em Mecatrônica
+                    </SelectItem>
+                    <SelectItem value="tecnico-eletromecanica">
+                      Técnico em Eletromecânica
                     </SelectItem>
                     <SelectItem value="tecnico-mecanica">
                       Técnico em Mecânica
                     </SelectItem>
-                    <SelectItem value="tecnico-automacao">
-                      Técnico em Automação
+                    <SelectItem value="tecnico-manutencao-maquinas">
+                      Técnico em Manutenção de Máquinas Industriais
                     </SelectItem>
-                    <SelectItem value="tecnico-edificacoes">
-                      Técnico em Edificações
+                    <SelectItem value="tecnico-administracao">
+                      Técnico em Administração
                     </SelectItem>
-                    <SelectItem value="superior-analise-sistemas">
-                      Análise e Desenvolvimento de Sistemas
+                    <SelectItem value="tecnico-controle-qualidade">
+                      Técnico em Controle de Qualidade
                     </SelectItem>
-                    <SelectItem value="superior-engenharia-producao">
-                      Engenharia de Produção
+                    <SelectItem value="tecnico-seguranca-trabalho">
+                      Técnico em Segurança do Trabalho
+                    </SelectItem>
+                    <SelectItem value="tecnico-cibersistemas-automacao">
+                      Técnico em Cibersistemas para Automação
                     </SelectItem>
                     <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>

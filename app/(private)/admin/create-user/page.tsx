@@ -406,32 +406,32 @@ const CreateAdmin = () => {
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tecnico-informatica">
-                      Técnico em Informática
-                    </SelectItem>
-                    <SelectItem value="tecnico-eletronica">
-                      Técnico em Eletrônica
-                    </SelectItem>
-                    <SelectItem value="tecnico-mecanica">
-                      Técnico em Mecânica
-                    </SelectItem>
                     <SelectItem value="tecnico-automacao">
                       Técnico em Automação
-                    </SelectItem>
-                    <SelectItem value="tecnico-edificacoes">
-                      Técnico em Edificações
-                    </SelectItem>
-                    <SelectItem value="tecnico-logistica">
-                      Técnico em Logística
                     </SelectItem>
                     <SelectItem value="tecnico-mecatronica">
                       Técnico em Mecatrônica
                     </SelectItem>
-                    <SelectItem value="superior-analise-sistemas">
-                      Análise e Desenvolvimento de Sistemas
+                    <SelectItem value="tecnico-eletromecanica">
+                      Técnico em Eletromecânica
                     </SelectItem>
-                    <SelectItem value="superior-engenharia-producao">
-                      Engenharia de Produção
+                    <SelectItem value="tecnico-mecanica">
+                      Técnico em Mecânica
+                    </SelectItem>
+                    <SelectItem value="tecnico-manutencao-maquinas">
+                      Técnico em Manutenção de Máquinas Industriais
+                    </SelectItem>
+                    <SelectItem value="tecnico-administracao">
+                      Técnico em Administração
+                    </SelectItem>
+                    <SelectItem value="tecnico-controle-qualidade">
+                      Técnico em Controle de Qualidade
+                    </SelectItem>
+                    <SelectItem value="tecnico-seguranca-trabalho">
+                      Técnico em Segurança do Trabalho
+                    </SelectItem>
+                    <SelectItem value="tecnico-cibersistemas-automacao">
+                      Técnico em Cibersistemas para Automação
                     </SelectItem>
                     <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>
