@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,11 +6,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { z } from "zod";
-import { Shield } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { setAuthToken } from "@/lib/utils/auth";
 
 const loginSchema = z.object({
@@ -21,6 +21,8 @@ const loginSchema = z.object({
 const Auth = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,10 +42,10 @@ const Auth = () => {
         return;
       }
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(validationResult.data),
       });
@@ -51,7 +53,7 @@ const Auth = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Erro ao fazer login');
+        throw new Error(result.error || "Erro ao fazer login");
       }
 
       // Store token if provided
@@ -63,7 +65,10 @@ const Auth = () => {
       router.push("/dashboard");
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message.includes("credenciais") || error.message.includes("credentials")) {
+        if (
+          error.message.includes("credenciais") ||
+          error.message.includes("credentials")
+        ) {
           toast.error("Email ou senha incorretos");
         } else {
           toast.error(error.message);
@@ -77,57 +82,132 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-primary via-primary/90 to-secondary flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <Shield className="h-10 w-10 text-primary" />
+    <div className="min-h-screen flex">
+      {/* Left Panel - Welcome Section */}
+      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 p-12 flex-col justify-between relative overflow-hidden">
+        <div className="flex-1 flex flex-col justify-center max-w-md mx-auto">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Quer descobrir algo novo?
+          </h1>
+          <p className="text-lg text-gray-600 leading-relaxed">
+            Acesse o sistema para gerenciar atestados, visualizar relatórios e
+            explorar oportunidades de aprendizado e crescimento profissional.
+          </p>
+        </div>
+
+        {/* Decorative gradient orbs */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-linear-to-br from-blue-200/40 to-purple-200/40 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-linear-to-br from-pink-200/40 to-purple-200/40 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
+      </div>
+
+      {/* Right Panel - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white relative">
+        <div className="w-full max-w-md">
+          <div className="absolute top-8 right-8">
+            <Logo />
           </div>
-          <Logo className="justify-center" />
-          <div>
-            <CardTitle className="text-2xl">Acesso Administrativo</CardTitle>
-            <CardDescription>Sistema de Gestão - SENAI</CardDescription>
+
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Seu próximo passo{" "}
+              <span className="text-[#E63946]">começa aqui</span>
+            </h2>
+            <p className="text-gray-600">
+              Acesse sua conta e continue sua jornada de aprendizado e
+              descobertas.
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="login-email">Email</Label>
+              <Label htmlFor="login-email" className="text-gray-700">
+                E-mail ou CPF (apenas números) *
+              </Label>
               <Input
                 id="login-email"
                 name="email"
-                type="email"
-                placeholder="admin@senai.com"
+                type="text"
+                placeholder="Digite seu e-mail ou CPF"
                 required
                 disabled={loading}
+                className="h-12"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="login-password">Senha</Label>
-              <Input
-                id="login-password"
-                name="senha"
-                type="password"
-                placeholder="••••••••"
-                required
-                disabled={loading}
-              />
+              <Label htmlFor="login-password" className="text-gray-700">
+                Senha *
+              </Label>
+              <div className="relative">
+                <Input
+                  id="login-password"
+                  name="senha"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Digite sua senha"
+                  required
+                  disabled={loading}
+                  className="h-12 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) =>
+                    setRememberMe(checked as boolean)
+                  }
+                />
+                <label
+                  htmlFor="remember"
+                  className="text-sm text-gray-600 cursor-pointer"
+                >
+                  Lembre-se de mim neste dispositivo!
+                </label>
+              </div>
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-gray-600 hover:text-[#E63946] transition-colors"
+              >
+                Esqueceu a senha?
+              </Link>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-12 bg-[#E63946] hover:bg-[#d32f2f] text-white text-base font-medium"
+              disabled={loading}
+            >
               {loading ? "Entrando..." : "Entrar"}
             </Button>
 
-            <div className="text-center mt-4">
-              <p className="text-sm text-muted-foreground">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
                 Não tem uma conta?{" "}
-                <Link href="/auth/signup" className="text-primary hover:underline">
-                  Cadastrar como estudante
+                <Link
+                  href="/auth/signup"
+                  className="text-[#E63946] hover:underline font-medium"
+                >
+                  Clique aqui
                 </Link>
               </p>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
