@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
+import ProfilePill from "@/components/ProfilePill";
 import { formatDate } from "@/utils/formatDate";
 import { ArrowLeft, UserCircle, Mail, IdCard, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -90,15 +91,24 @@ export default function Perfil() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto flex items-center gap-4 px-4 py-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/dashboard")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Logo />
+        <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/dashboard")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <Logo />
+          </div>
+          <div>
+            <ProfilePill
+              name={profile?.nome}
+              role={profile?.tipo_usuario}
+              size="md"
+            />
+          </div>
         </div>
       </header>
 

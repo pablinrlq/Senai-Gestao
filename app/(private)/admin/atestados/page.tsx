@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/utils/formatDate";
 import { Logo } from "@/components/Logo";
+import ProfilePill from "@/components/ProfilePill";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -290,7 +291,7 @@ export default function AdminAtestadosPage() {
           </Button>
           <Logo />
           <div className="ml-auto">
-            <p className="text-sm font-medium">Admin: {profile.nome}</p>
+            <ProfilePill name={profile?.nome} role="Administrador" size="md" />
           </div>
         </div>
       </header>

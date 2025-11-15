@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
+import ProfilePill from "@/components/ProfilePill";
 import { FileText, LogOut, UserCircle, User, UserPlus } from "lucide-react";
 
 interface Profile {
@@ -25,13 +26,6 @@ export default function Dashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const initials = (() => {
-    if (!profile?.nome) return "";
-    const parts = profile.nome.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  })();
 
   const fetchProfile = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -109,17 +103,7 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-full px-3 py-1">
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-blue-600 text-white font-medium">
-                {initials}
-              </div>
-              <div className="hidden sm:block text-right">
-                <p className="font-medium text-sm">{profile?.nome}</p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  Administrador
-                </p>
-              </div>
-            </div>
+            <ProfilePill name={profile?.nome} role="Administrador" size="md" />
             <Button
               variant="ghost"
               size="icon"

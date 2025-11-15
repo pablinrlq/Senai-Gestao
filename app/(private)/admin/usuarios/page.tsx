@@ -13,6 +13,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
+import ProfilePill from "@/components/ProfilePill";
+interface SimpleProfile {
+  nome: string;
+  tipo_usuario?: string;
+}
 import {
   ArrowLeft,
   Search,
@@ -62,6 +67,7 @@ export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<SimpleProfile | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [atestados, setAtestados] = useState<Atestado[]>([]);
 
@@ -92,6 +98,7 @@ export default function Usuarios() {
       }
 
       setIsAdmin(true);
+      setProfile(data.user);
       fetchUsuarios();
     } catch (error) {
       console.error("Error checking user type:", error);
@@ -277,15 +284,23 @@ export default function Usuarios() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto flex items-center gap-4 px-4 py-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/dashboard")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Logo />
+        <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/dashboard")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <Logo />
+          </div>
+
+          <div>
+            {profile ? (
+              <ProfilePill name={profile.nome} role={profile.tipo_usuario} />
+            ) : null}
+          </div>
         </div>
       </header>
 

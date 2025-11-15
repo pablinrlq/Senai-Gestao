@@ -5,7 +5,8 @@ import {
 } from "@/lib/firebase/middleware";
 import { CreateUserSchema } from "@/lib/validations/schemas";
 import { validateRequestBody } from "@/lib/validations/helpers";
-import { hashPassword } from "@/lib/firebase/admin";
+import { hashPassword, supabase } from "@/lib/firebase/admin";
+import argon2 from "argon2";
 
 // POST /api/admin/create-user - Admin creates new user (admin or staff)
 export const POST = withFirebaseAdmin(async (req, db) => {
@@ -51,8 +52,31 @@ export const POST = withFirebaseAdmin(async (req, db) => {
       );
     }
 
+    // Create Supabase Auth user so the new account can authenticate via Supabase
+    console.log("Admin creating Supabase auth user for:", validatedData.email);
+    const { data: createdUser, error: createUserError } =
+      await supabase.auth.admin.createUser({
+        email: validatedData.email,
+        password: validatedData.senha,
+        email_confirm: true,
+      } as any);
+
+    if (createUserError) {
+      console.error(
+        "Supabase createUser error (admin create):",
+        createUserError
+      );
+      return NextResponse.json(
+        { error: createUserError.message || "Erro ao criar usuário no Auth" },
+        { status: 400 }
+      );
+    }
+
+    const uid = createdUser?.user?.id;
+
     const { data, error } = await safeFirestoreOperation(async () => {
-      const userData = {
+      const userData: any = {
+        id: uid,
         nome: validatedData.nome,
         email: validatedData.email,
         cargo: validatedData.cargo,
@@ -73,6 +97,16 @@ export const POST = withFirebaseAdmin(async (req, db) => {
     }, "Failed to create user");
 
     if (error) {
+      // Rollback created Supabase auth user if profile insertion failed
+      try {
+        if (uid) await supabase.auth.admin.deleteUser(uid);
+      } catch (delErr) {
+        console.error(
+          "Failed to rollback created auth user (admin create):",
+          delErr
+        );
+      }
+
       return NextResponse.json({ error }, { status: 500 });
     }
 
