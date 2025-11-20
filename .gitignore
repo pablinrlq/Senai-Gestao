@@ -49,3 +49,5 @@ senai-6f084-firebase-adminsdk-*.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel

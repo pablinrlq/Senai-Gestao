@@ -6,7 +6,7 @@ export const Logo = ({ className = "" }: { className?: string }) => {
       <Image
         src="/logo-senai.png"
         alt="SENAI Gestão"
-        width={140}
+        width={110}
         height={36}
         className="object-contain"
       />

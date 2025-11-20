@@ -234,7 +234,7 @@ const CreateAdmin = () => {
             <Image
               src="/logo-senai.png"
               alt="SENAI Gestão"
-              width={140}
+              width={110}
               height={36}
               className="object-contain"
             />
