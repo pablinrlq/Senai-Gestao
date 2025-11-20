@@ -60,10 +60,15 @@ Este projeto utiliza next/font para otimizar o carregamento das fontes, incluind
 Aprenda mais sobre Next.js nos links:
 
 Documentação do Next.js
+
 https://nextjs.org/docs
+
 Curso Interativo de Next.js
+
 https://nextjs.org/learn
+
 Repositório oficial no GitHub
+
 https://github.com/vercel/next.js
 
 ▲ Deploy na Vercel
