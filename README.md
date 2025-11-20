@@ -1,4 +1,4 @@
-# 🏥 Atestado Stock Hub
+# 🏥 Sistema de atestados para o Senai Centro 4.0
 
 Um sistema moderno, seguro e completo para **gestão e revisão de atestados**, desenvolvido com **Next.js, TypeScript e Supabase**.
 
@@ -27,23 +27,6 @@ Projetado para escolas e instituições que precisam aprovar, rejeitar e organiz
 - Projeto Supabase configurado
 - Variáveis de ambiente definidas
 
----
-
-### **Instalação**
-
-
-# Instalar dependências
-bun install
-
-# Criar arquivo de variáveis de ambiente
-cp config/.env.example .env.local
-
-# Editar .env.local com suas credenciais do Supabase
-Rodar o servidor
-bash
-Copiar código
-bun dev
-Abra http://localhost:3000 no navegador.
 
 📚 Documentação
 A documentação completa está disponível na pasta /docs:
