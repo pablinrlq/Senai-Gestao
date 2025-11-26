@@ -38,6 +38,7 @@ const studentSignupSchema = z
     confirmarSenha: z.string(),
     curso: z.string().min(1, "Curso é obrigatório"),
     periodo: z.string().min(1, "Período é obrigatório"),
+    turma: z.string().optional().nullable(),
   })
   .refine((data) => data.senha === data.confirmarSenha, {
     message: "Senhas não coincidem",
@@ -52,6 +53,7 @@ const StudentSignup = () => {
   const [passwordValue, setPasswordValue] = useState("");
   const [curso, setCurso] = useState("");
   const [periodo, setPeriodo] = useState("");
+  const [turma, setTurma] = useState("");
 
   const passwordRequirements = [
     { text: "No mínimo 8 caracteres", met: passwordValue.length >= 8 },
@@ -80,6 +82,7 @@ const StudentSignup = () => {
       confirmarSenha: formData.get("confirmarSenha") as string,
       curso,
       periodo,
+      turma,
     };
 
     try {
@@ -94,6 +97,8 @@ const StudentSignup = () => {
         ...validationResult.data,
         cargo: "USUARIO" as const,
       };
+      if (!createUserData.turma || String(createUserData.turma).trim() === "")
+        delete createUserData.turma;
 
       const response = await fetch("/api/auth/signup", {
         method: "POST",
@@ -281,6 +286,25 @@ const StudentSignup = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-turma" className="text-gray-700">
+                  Código da Turma (opcional)
+                </Label>
+                <Input
+                  id="signup-turma"
+                  name="turma"
+                  type="text"
+                  placeholder="Ex: T2024-A1"
+                  disabled={loading}
+                  value={turma}
+                  onChange={(e) => setTurma(e.target.value)}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

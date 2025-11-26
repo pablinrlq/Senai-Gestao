@@ -148,6 +148,13 @@ export async function POST(req: Request) {
       profile.periodo = (validatedData as any).periodo;
     }
 
+    if (
+      (validatedData as any).turma &&
+      String((validatedData as any).turma).trim() !== ""
+    ) {
+      profile.turma = (validatedData as any).turma;
+    }
+
     try {
       const hashed = await argon2.hash(validatedData.senha);
       profile.senha = hashed;
@@ -173,6 +180,7 @@ export async function POST(req: Request) {
       "telefone",
       "curso",
       "periodo",
+      "turma",
     ]);
 
     const insertPayload: Record<string, unknown> = {};
