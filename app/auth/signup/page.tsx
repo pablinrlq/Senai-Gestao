@@ -233,7 +233,6 @@ const StudentSignup = () => {
                 className="h-11"
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="signup-telefone" className="text-gray-700">
                 Telefone *
@@ -286,7 +285,12 @@ const StudentSignup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="signup-curso" className="text-gray-700">
-                  Curso (opcional)
+                  Curso{" "}
+                  {cargo === "USUARIO" ? (
+                    <span className="text-red-500">*</span>
+                  ) : (
+                    <span className="text-gray-500">(para alunos)</span>
+                  )}
                 </Label>
                 <Select
                   value={curso}
@@ -294,7 +298,11 @@ const StudentSignup = () => {
                   required={cargo === "USUARIO"}
                   disabled={loading || cargo !== "USUARIO"}
                 >
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger
+                    className={`h-11 ${
+                      cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
+                    }`}
+                  >
                     <SelectValue
                       placeholder={
                         cargo === "USUARIO"
@@ -340,22 +348,40 @@ const StudentSignup = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-turma" className="text-gray-700">
-                  Código da Turma (opcional)
+                  Código da Turma{" "}
+                  {cargo === "USUARIO" ? (
+                    <span className="text-red-500">*</span>
+                  ) : (
+                    <span className="text-gray-400 text-xs">(para alunos)</span>
+                  )}
                 </Label>
                 <Input
                   id="signup-turma"
                   name="turma"
                   type="text"
                   placeholder="Ex: T2024-A1"
-                  disabled={loading}
+                  required={cargo === "USUARIO"}
+                  disabled={loading || cargo !== "USUARIO"}
                   value={turma}
                   onChange={(e) => setTurma(e.target.value)}
-                  className="h-11"
+                  className={`h-11 ${
+                    cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
+                  }`}
                 />
+                {cargo === "USUARIO" && (
+                  <p className="text-xs text-muted-foreground">
+                    Campo obrigatório para alunos
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-periodo" className="text-gray-700">
-                  Período (opcional)
+                  Período{" "}
+                  {cargo === "USUARIO" ? (
+                    <span className="text-red-500">*</span>
+                  ) : (
+                    <span className="text-gray-400 text-xs">(para alunos)</span>
+                  )}
                 </Label>
                 <Select
                   value={periodo}
@@ -363,7 +389,11 @@ const StudentSignup = () => {
                   required={cargo === "USUARIO"}
                   disabled={loading || cargo !== "USUARIO"}
                 >
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger
+                    className={`h-11 ${
+                      cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
+                    }`}
+                  >
                     <SelectValue
                       placeholder={
                         cargo === "USUARIO"
@@ -379,6 +409,11 @@ const StudentSignup = () => {
                     <SelectItem value="integral">Integral</SelectItem>
                   </SelectContent>
                 </Select>
+                {cargo === "USUARIO" && (
+                  <p className="text-xs text-muted-foreground">
+                    Campo obrigatório para alunos
+                  </p>
+                )}
               </div>
             </div>
 
