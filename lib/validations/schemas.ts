@@ -32,6 +32,7 @@ export const CreateUserSchema = UserSchema.omit({
   metadata: z.record(z.any()).optional(),
   curso: z.string().optional().nullable(),
   periodo: z.string().optional().nullable(),
+  turma: z.string().optional().nullable(),
   status: z
     .enum(["ativo", "inativo"], {
       errorMap: () => ({ message: "Status deve ser 'ativo' ou 'inativo'" }),

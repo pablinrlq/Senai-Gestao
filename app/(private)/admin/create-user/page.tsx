@@ -49,6 +49,7 @@ const adminCreationSchema = z
       }),
     }),
     curso: z.string().optional(),
+    turma: z.string().optional().nullable(),
   })
   .refine((data) => data.senha === data.confirmarSenha, {
     message: "Senhas não coincidem",
@@ -70,6 +71,7 @@ const CreateAdmin = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [cargo, setCargo] = useState("");
   const [curso, setCurso] = useState("");
+  const [turma, setTurma] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
@@ -88,7 +90,10 @@ const CreateAdmin = () => {
   ];
 
   useEffect(() => {
-    if (cargo !== "USUARIO") setCurso("");
+    if (cargo !== "USUARIO") {
+      setCurso("");
+      setTurma("");
+    }
   }, [cargo]);
 
   useEffect(() => {
@@ -131,6 +136,7 @@ const CreateAdmin = () => {
       confirmarSenha: formData.get("confirmarSenha") as string,
       cargo: cargo,
       curso: curso,
+      turma: turma,
     };
 
     try {
@@ -145,6 +151,8 @@ const CreateAdmin = () => {
         ...validationResult.data,
       };
       if (!createUserData.curso) delete createUserData.curso;
+      if (!createUserData.turma || String(createUserData.turma).trim() === "")
+        delete createUserData.turma;
       createUserData.status = createUserData.status || "ativo";
 
       const response = await fetch("/api/admin/create-user", {
@@ -442,6 +450,41 @@ const CreateAdmin = () => {
                   </p>
                 )}
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="admin-turma"
+                  className="text-sm font-semibold text-gray-700"
+                >
+                  Código da Turma{" "}
+                  {cargo === "USUARIO" ? (
+                    <span className="text-red-500">*</span>
+                  ) : (
+                    <span className="text-gray-400 text-xs">(opcional)</span>
+                  )}
+                </Label>
+                <Input
+                  id="admin-turma"
+                  name="turma"
+                  type="text"
+                  placeholder="Ex: T2024-A1"
+                  value={turma}
+                  onChange={(e) => setTurma(e.target.value)}
+                  required={cargo === "USUARIO"}
+                  disabled={loading || cargo !== "USUARIO"}
+                  className={`h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500 ${
+                    cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
+                  }`}
+                />
+                {cargo === "USUARIO" && (
+                  <p className="text-xs text-muted-foreground">
+                    Campo obrigatório para alunos
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

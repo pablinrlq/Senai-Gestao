@@ -51,6 +51,10 @@ export async function GET(req: NextRequest) {
               email:
                 typeof userData?.email === "string" ? userData!.email : "N/A",
               ra: typeof userData?.ra === "string" ? userData!.ra : "N/A",
+              turma:
+                typeof userData?.turma === "string"
+                  ? userData!.turma
+                  : undefined,
             };
           }
         }

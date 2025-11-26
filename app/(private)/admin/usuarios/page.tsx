@@ -47,6 +47,7 @@ interface Usuario {
   created_at: string;
   status?: string;
   curso?: string | null;
+  turma?: string | null;
 }
 
 interface Atestado {
@@ -361,6 +362,14 @@ export default function Usuarios() {
                                 Curso:{" "}
                                 <span className="font-medium">
                                   {usuario.curso}
+                                </span>
+                              </p>
+                            )}
+                            {usuario.turma && (
+                              <p className="text-xs text-muted-foreground">
+                                Turma:{" "}
+                                <span className="font-medium">
+                                  {usuario.turma}
                                 </span>
                               </p>
                             )}
