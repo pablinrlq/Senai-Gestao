@@ -266,6 +266,13 @@ export const POST = withFirebaseAdmin(async (req, db) => {
 
     const imageFile = formData.get("imagem_atestado");
     if (imageFile && imageFile instanceof File) {
+      console.log("[API] Processing image upload:", {
+        fileName: imageFile.name,
+        fileType: imageFile.type,
+        fileSize: imageFile.size,
+        userId: authResult.uid,
+      });
+
       try {
         const uploadResult = await uploadImageToStorage(
           imageFile,
@@ -274,12 +281,25 @@ export const POST = withFirebaseAdmin(async (req, db) => {
         );
         imageUrl = uploadResult.url;
         imagePath = uploadResult.path;
+        console.log("[API] Image uploaded successfully:", {
+          imageUrl,
+          imagePath,
+        });
       } catch (uploadError) {
         console.error(
-          "Erro ao enviar imagem para Supabase Storage:",
+          "[API] Erro ao enviar imagem para Supabase Storage:",
           uploadError
         );
+        console.error("[API] Upload error details:", {
+          message:
+            uploadError instanceof Error
+              ? uploadError.message
+              : "Unknown error",
+          stack: uploadError instanceof Error ? uploadError.stack : undefined,
+        });
+
         try {
+          console.log("[API] Attempting fallback upload to public folder...");
           const fallback = await uploadImageToPublicFolder(
             imageFile,
             authResult.uid,
@@ -287,9 +307,13 @@ export const POST = withFirebaseAdmin(async (req, db) => {
           );
           imageUrl = fallback.url;
           imagePath = fallback.path;
+          console.log("[API] Fallback upload successful:", {
+            imageUrl,
+            imagePath,
+          });
         } catch (fallbackErr) {
           console.error(
-            "Erro no fallback de upload para pasta pública:",
+            "[API] Erro no fallback de upload para pasta pública:",
             fallbackErr
           );
           return NextResponse.json(
@@ -298,6 +322,8 @@ export const POST = withFirebaseAdmin(async (req, db) => {
           );
         }
       }
+    } else {
+      console.warn("[API] No image file provided or invalid file type");
     }
 
     const { data: createdData, error } = await safeFirestoreOperation(

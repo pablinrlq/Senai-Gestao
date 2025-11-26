@@ -14,20 +14,45 @@ export async function uploadImageToStorage(
   folder: string = "atestados"
 ): Promise<{ url: string; path: string }> {
   try {
+    console.log(
+      `[Storage] Starting upload - Bucket: ${STORAGE_BUCKET}, Folder: ${folder}, User: ${userId}`
+    );
+
     const fileExtension = file.name.split(".").pop() || "jpg";
     const fileName = `${folder}/${userId}/${uuidv4()}.${fileExtension}`;
+
+    console.log(
+      `[Storage] File path: ${fileName}, Type: ${file.type}, Size: ${file.size} bytes`
+    );
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    await storage.uploadFile(STORAGE_BUCKET, fileName, buffer, file.type);
+    console.log(`[Storage] Buffer created, size: ${buffer.length} bytes`);
+
+    const uploadResult = await storage.uploadFile(
+      STORAGE_BUCKET,
+      fileName,
+      buffer,
+      file.type
+    );
+
+    console.log(`[Storage] Upload successful:`, uploadResult);
 
     const publicUrl = storage.getPublicUrl(STORAGE_BUCKET, fileName);
 
+    console.log(`[Storage] Public URL generated: ${publicUrl}`);
+
     return { url: publicUrl, path: fileName };
   } catch (error) {
-    console.error("Error uploading file to Supabase Storage:", error);
-    throw new Error("Failed to upload image");
+    console.error("[Storage] Error uploading file to Supabase Storage:", error);
+    console.error("[Storage] Bucket:", STORAGE_BUCKET);
+    console.error("[Storage] Error details:", JSON.stringify(error, null, 2));
+    throw new Error(
+      `Failed to upload image: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
   }
 }
 

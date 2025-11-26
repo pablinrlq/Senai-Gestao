@@ -77,6 +77,7 @@ export const POST = withFirebaseAdmin(async (req, db) => {
         senha: await hashPassword(validatedData.senha),
         status: validatedData.status || "ativo",
         ...(validatedData.curso ? { curso: validatedData.curso } : {}),
+        ...(validatedData.turma ? { turma: validatedData.turma } : {}),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         ...(bodyUnknown?.metadata ? { metadata: bodyUnknown.metadata } : {}),

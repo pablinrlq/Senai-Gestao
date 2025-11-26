@@ -38,6 +38,13 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AtestadoData {
   id: string;
@@ -53,6 +60,7 @@ interface AtestadoData {
     nome: string;
     email: string;
     ra: string;
+    turma?: string;
   };
 }
 
@@ -65,9 +73,14 @@ interface Profile {
 export default function AdminAtestadosPage() {
   const router = useRouter();
   const [atestados, setAtestados] = useState<AtestadoData[]>([]);
+  const [filteredAtestados, setFilteredAtestados] = useState<AtestadoData[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [accessChecked, setAccessChecked] = useState(false);
+  const [turmaFilter, setTurmaFilter] = useState<string>("");
+  const [turmasDisponiveis, setTurmasDisponiveis] = useState<string[]>([]);
 
   const [observacoes, setObservacoes] = useState("");
 
@@ -123,7 +136,18 @@ export default function AdminAtestadosPage() {
 
       if (response.ok) {
         const result = await response.json();
-        setAtestados(result.data || []);
+        const atestadosData = result.data || [];
+        setAtestados(atestadosData);
+        setFilteredAtestados(atestadosData);
+
+        const turmas = Array.from(
+          new Set(
+            atestadosData
+              .map((a: AtestadoData) => a.usuario?.turma)
+              .filter((t: string | undefined): t is string => !!t)
+          )
+        ).sort() as string[];
+        setTurmasDisponiveis(turmas);
       } else {
         toast.error("Erro ao carregar atestados");
       }
@@ -139,6 +163,16 @@ export default function AdminAtestadosPage() {
     checkAdminAccess();
     fetchAtestados();
   }, [checkAdminAccess, fetchAtestados]);
+
+  useEffect(() => {
+    if (!turmaFilter || turmaFilter === "__all__") {
+      setFilteredAtestados(atestados);
+    } else {
+      setFilteredAtestados(
+        atestados.filter((a) => a.usuario?.turma === turmaFilter)
+      );
+    }
+  }, [turmaFilter, atestados]);
 
   const handleReviewAtestado = async (
     atestadoId: string,
@@ -317,22 +351,61 @@ export default function AdminAtestadosPage() {
           </p>
         </div>
 
+        {turmasDisponiveis.length > 0 && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                <Label
+                  htmlFor="turma-filter"
+                  className="font-semibold min-w-fit"
+                >
+                  Filtrar por Turma:
+                </Label>
+                <Select value={turmaFilter} onValueChange={setTurmaFilter}>
+                  <SelectTrigger id="turma-filter" className="w-full md:w-64">
+                    <SelectValue placeholder="Todas as turmas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todas as turmas</SelectItem>
+                    {turmasDisponiveis.map((turma) => (
+                      <SelectItem key={turma} value={turma}>
+                        {turma}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {turmaFilter && turmaFilter !== "__all__" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTurmaFilter("__all__")}
+                  >
+                    Limpar Filtro
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {loading ? (
           <div className="flex justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
           </div>
-        ) : atestados.length === 0 ? (
+        ) : filteredAtestados.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Nenhum atestado encontrado
+                {turmaFilter && turmaFilter !== "__all__"
+                  ? `Nenhum atestado encontrado para a turma ${turmaFilter}`
+                  : "Nenhum atestado encontrado"}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-6">
-            {atestados.map((atestado) => (
+            {filteredAtestados.map((atestado) => (
               <Card
                 key={atestado.id}
                 className="hover:shadow-lg transition-shadow"
@@ -346,6 +419,12 @@ export default function AdminAtestadosPage() {
                       </CardTitle>
                       <CardDescription>
                         RA: {atestado.usuario?.ra} • {atestado.usuario?.email}
+                        {atestado.usuario?.turma && (
+                          <>
+                            {" "}
+                            • Turma: <strong>{atestado.usuario.turma}</strong>
+                          </>
+                        )}
                       </CardDescription>
                     </div>
                     {getStatusBadge(atestado.status)}
