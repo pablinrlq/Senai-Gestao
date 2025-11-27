@@ -13,6 +13,7 @@ import {
   User,
   FileText,
   Download,
+  Search,
 } from "lucide-react";
 
 import {
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { formatDate } from "@/utils/formatDate";
 import { Logo } from "@/components/Logo";
 import ProfilePill from "@/components/ProfilePill";
@@ -80,6 +82,8 @@ export default function AdminAtestadosPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [accessChecked, setAccessChecked] = useState(false);
   const [turmaFilter, setTurmaFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [turmasDisponiveis, setTurmasDisponiveis] = useState<string[]>([]);
 
   const [observacoes, setObservacoes] = useState("");
@@ -165,14 +169,29 @@ export default function AdminAtestadosPage() {
   }, [checkAdminAccess, fetchAtestados]);
 
   useEffect(() => {
-    if (!turmaFilter || turmaFilter === "__all__") {
-      setFilteredAtestados(atestados);
-    } else {
-      setFilteredAtestados(
-        atestados.filter((a) => a.usuario?.turma === turmaFilter)
+    let filtered = atestados;
+
+    if (turmaFilter && turmaFilter !== "__all__") {
+      filtered = filtered.filter((a) => a.usuario?.turma === turmaFilter);
+    }
+
+    if (statusFilter && statusFilter !== "__all__") {
+      filtered = filtered.filter((a) => a.status === statusFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        (a) =>
+          a.usuario?.nome?.toLowerCase().includes(query) ||
+          a.usuario?.email?.toLowerCase().includes(query) ||
+          a.usuario?.ra?.toLowerCase().includes(query) ||
+          a.motivo?.toLowerCase().includes(query)
       );
     }
-  }, [turmaFilter, atestados]);
+
+    setFilteredAtestados(filtered);
+  }, [turmaFilter, statusFilter, searchQuery, atestados]);
 
   const handleReviewAtestado = async (
     atestadoId: string,
@@ -351,42 +370,99 @@ export default function AdminAtestadosPage() {
           </p>
         </div>
 
-        {turmasDisponiveis.length > 0 && (
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                <Label
-                  htmlFor="turma-filter"
-                  className="font-semibold min-w-fit"
-                >
-                  Filtrar por Turma:
-                </Label>
-                <Select value={turmaFilter} onValueChange={setTurmaFilter}>
-                  <SelectTrigger id="turma-filter" className="w-full md:w-64">
-                    <SelectValue placeholder="Todas as turmas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">Todas as turmas</SelectItem>
-                    {turmasDisponiveis.map((turma) => (
-                      <SelectItem key={turma} value={turma}>
-                        {turma}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {turmaFilter && turmaFilter !== "__all__" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setTurmaFilter("__all__")}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar por nome, email, RA ou motivo..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-11"
+                />
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <Label
+                    htmlFor="status-filter"
+                    className="text-sm font-medium mb-2 block"
                   >
-                    Limpar Filtro
-                  </Button>
+                    Status
+                  </Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger id="status-filter" className="w-full">
+                      <SelectValue placeholder="Todos os status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">Todos os status</SelectItem>
+                      <SelectItem value="pendente">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-yellow-600" />
+                          Pendente
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="aprovado">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-3 h-3 text-green-600" />
+                          Aprovado
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="rejeitado">
+                        <div className="flex items-center gap-2">
+                          <XCircle className="w-3 h-3 text-red-600" />
+                          Rejeitado
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {turmasDisponiveis.length > 0 && (
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="turma-filter"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Turma
+                    </Label>
+                    <Select value={turmaFilter} onValueChange={setTurmaFilter}>
+                      <SelectTrigger id="turma-filter" className="w-full">
+                        <SelectValue placeholder="Todas as turmas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">Todas as turmas</SelectItem>
+                        {turmasDisponiveis.map((turma) => (
+                          <SelectItem key={turma} value={turma}>
+                            {turma}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {(searchQuery ||
+                  (turmaFilter && turmaFilter !== "__all__") ||
+                  (statusFilter && statusFilter !== "__all__")) && (
+                  <div className="flex items-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setTurmaFilter("__all__");
+                        setStatusFilter("__all__");
+                      }}
+                    >
+                      Limpar Filtros
+                    </Button>
+                  </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </CardContent>
+        </Card>
 
         {loading ? (
           <div className="flex justify-center">
@@ -396,9 +472,11 @@ export default function AdminAtestadosPage() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                {turmaFilter && turmaFilter !== "__all__"
-                  ? `Nenhum atestado encontrado para a turma ${turmaFilter}`
+              <p className="text-muted-foreground text-center">
+                {searchQuery ||
+                turmaFilter !== "__all__" ||
+                statusFilter !== "__all__"
+                  ? "Nenhum atestado encontrado com os filtros aplicados"
                   : "Nenhum atestado encontrado"}
               </p>
             </CardContent>
