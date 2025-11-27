@@ -224,8 +224,15 @@ export const storage = {
   ) {
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(path, buffer, { contentType, upsert: false });
-    if (error) throw error;
+      .upload(path, buffer, {
+        contentType: contentType || "image/jpeg",
+        upsert: true,
+        cacheControl: "3600",
+      });
+    if (error) {
+      console.error("Supabase Storage upload error:", error);
+      throw error;
+    }
     return data;
   },
   getPublicUrl(bucket: string, path: string) {

@@ -49,6 +49,8 @@ const adminCreationSchema = z
       }),
     }),
     curso: z.string().optional(),
+    periodo: z.string().optional().nullable(),
+    turma: z.string().optional().nullable(),
   })
   .refine((data) => data.senha === data.confirmarSenha, {
     message: "Senhas não coincidem",
@@ -56,7 +58,11 @@ const adminCreationSchema = z
   })
   .refine(
     (data) =>
-      !(data.cargo === "USUARIO") || (data.curso && data.curso.length > 0),
+      !(data.cargo === "USUARIO") ||
+      (data.curso &&
+        data.curso.length > 0 &&
+        data.periodo &&
+        String(data.periodo).trim().length > 0),
     {
       message: "Curso é obrigatório para alunos",
       path: ["curso"],
@@ -70,6 +76,8 @@ const CreateAdmin = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [cargo, setCargo] = useState("");
   const [curso, setCurso] = useState("");
+  const [periodo, setPeriodo] = useState("");
+  const [turma, setTurma] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
@@ -88,7 +96,11 @@ const CreateAdmin = () => {
   ];
 
   useEffect(() => {
-    if (cargo !== "USUARIO") setCurso("");
+    if (cargo !== "USUARIO") {
+      setCurso("");
+      setTurma("");
+      setPeriodo("");
+    }
   }, [cargo]);
 
   useEffect(() => {
@@ -131,6 +143,8 @@ const CreateAdmin = () => {
       confirmarSenha: formData.get("confirmarSenha") as string,
       cargo: cargo,
       curso: curso,
+      periodo: periodo,
+      turma: turma,
     };
 
     try {
@@ -145,6 +159,13 @@ const CreateAdmin = () => {
         ...validationResult.data,
       };
       if (!createUserData.curso) delete createUserData.curso;
+      if (
+        !createUserData.periodo ||
+        String(createUserData.periodo).trim() === ""
+      )
+        delete createUserData.periodo;
+      if (!createUserData.turma || String(createUserData.turma).trim() === "")
+        delete createUserData.turma;
       createUserData.status = createUserData.status || "ativo";
 
       const response = await fetch("/api/admin/create-user", {
@@ -278,13 +299,17 @@ const CreateAdmin = () => {
                   htmlFor="admin-ra"
                   className="text-sm font-semibold text-gray-700"
                 >
-                  RA/Matrícula *
+                  {cargo === "USUARIO" ? (
+                    <>RA/Matrícula *</>
+                  ) : (
+                    <>RE (Registro de Empregado) *</>
+                  )}
                 </Label>
                 <Input
                   id="admin-ra"
                   name="ra"
                   type="text"
-                  placeholder="ADM12345"
+                  placeholder={cargo === "USUARIO" ? "ADM12345" : "RE12345"}
                   required
                   disabled={loading}
                   className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
@@ -381,9 +406,7 @@ const CreateAdmin = () => {
                   Curso{" "}
                   {cargo === "USUARIO" ? (
                     <span className="text-red-500">*</span>
-                  ) : (
-                    <span className="text-gray-400 text-xs">(opcional)</span>
-                  )}
+                  ) : null}
                 </Label>
                 <Select
                   value={curso}
@@ -436,11 +459,72 @@ const CreateAdmin = () => {
                     <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>
                 </Select>
-                {cargo === "USUARIO" && (
-                  <p className="text-xs text-muted-foreground">
-                    Campo obrigatório para alunos
-                  </p>
-                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="admin-turma"
+                  className="text-sm font-semibold text-gray-700"
+                >
+                  Código da Turma{" "}
+                  {cargo === "USUARIO" ? (
+                    <span className="text-red-500">*</span>
+                  ) : null}
+                </Label>
+                <Input
+                  id="admin-turma"
+                  name="turma"
+                  type="text"
+                  placeholder="Ex: T2024-A1"
+                  value={turma}
+                  onChange={(e) => setTurma(e.target.value)}
+                  required={cargo === "USUARIO"}
+                  disabled={loading || cargo !== "USUARIO"}
+                  className={`h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500 ${
+                    cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="admin-periodo"
+                  className="text-sm font-semibold text-gray-700"
+                >
+                  Período{" "}
+                  {cargo === "USUARIO" ? (
+                    <span className="text-red-500">*</span>
+                  ) : null}
+                </Label>
+                <Select
+                  value={periodo}
+                  onValueChange={setPeriodo}
+                  name="periodo"
+                  required={cargo === "USUARIO"}
+                  disabled={loading || cargo !== "USUARIO"}
+                >
+                  <SelectTrigger
+                    className={`h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500 ${
+                      cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
+                    }`}
+                  >
+                    <SelectValue
+                      placeholder={
+                        cargo === "USUARIO"
+                          ? "Selecione um período"
+                          : "Apenas para alunos"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="matutino">Matutino</SelectItem>
+                    <SelectItem value="vespertino">Vespertino</SelectItem>
+                    <SelectItem value="noturno">Noturno</SelectItem>
+                    <SelectItem value="integral">Integral</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

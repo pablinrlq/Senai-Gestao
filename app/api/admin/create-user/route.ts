@@ -31,17 +31,34 @@ export const POST = withFirebaseAdmin(async (req, db) => {
       );
     }
 
-    const existingRASnapshot = await db
-      .collection("usuarios")
-      .where("ra", "==", validatedData.ra)
-      .limit(1)
-      .get();
+    if (validatedData.cargo === "USUARIO") {
+      const existingRASnapshot = await db
+        .collection("usuarios")
+        .where("ra", "==", validatedData.ra)
+        .limit(1)
+        .get();
 
-    if (!existingRASnapshot.empty) {
-      return NextResponse.json(
-        { error: "RA já está sendo usado por outro usuário" },
-        { status: 409 }
-      );
+      if (!existingRASnapshot.empty) {
+        return NextResponse.json(
+          { error: "RA já está sendo usado por outro usuário" },
+          { status: 409 }
+        );
+      }
+    } else {
+      if (validatedData.ra) {
+        const existingRESnapshot = await db
+          .collection("usuarios")
+          .where("registro_empregado", "==", validatedData.ra)
+          .limit(1)
+          .get();
+
+        if (!existingRESnapshot.empty) {
+          return NextResponse.json(
+            { error: "RE já está sendo usado por outro usuário" },
+            { status: 409 }
+          );
+        }
+      }
     }
 
     console.log("Admin creating Supabase auth user for:", validatedData.email);
@@ -73,10 +90,14 @@ export const POST = withFirebaseAdmin(async (req, db) => {
         email: validatedData.email,
         cargo: validatedData.cargo,
         ...(validatedData.telefone ? { telefone: validatedData.telefone } : {}),
-        ra: validatedData.ra,
+        ...(validatedData.cargo === "USUARIO" ? { ra: validatedData.ra } : {}),
         senha: await hashPassword(validatedData.senha),
         status: validatedData.status || "ativo",
         ...(validatedData.curso ? { curso: validatedData.curso } : {}),
+        ...(validatedData.turma ? { turma: validatedData.turma } : {}),
+        ...(validatedData.cargo !== "USUARIO" && validatedData.ra
+          ? { registro_empregado: validatedData.ra }
+          : {}),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         ...(bodyUnknown?.metadata ? { metadata: bodyUnknown.metadata } : {}),

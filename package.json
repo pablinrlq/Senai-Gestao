@@ -10,7 +10,8 @@
     "hash-passwords": "bun run scripts/hash-passwords.ts",
     "test-tokens": "bun run scripts/test-tokens.ts",
     "setup-uploads": "bun run scripts/setup-uploads.ts",
-    "cleanup-uploads": "bun run scripts/cleanup-uploads.ts"
+    "cleanup-uploads": "bun run scripts/cleanup-uploads.ts",
+    "test-storage": "bun run scripts/test-supabase-storage.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

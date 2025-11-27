@@ -39,6 +39,7 @@ interface AtestadoData {
   id: string;
   data_inicio: string;
   data_fim: string;
+  periodo_afastamento?: number | null;
   motivo: string;
   status: "pendente" | "aprovado" | "rejeitado";
   imagem: string;
@@ -323,7 +324,56 @@ export default function AtestadosPage() {
                       <p className="font-medium text-muted-foreground">
                         Data de Fim
                       </p>
-                      <p>{formatDate(atestado.data_fim)}</p>
+                      <div className="flex items-center gap-3">
+                        <p>{formatDate(atestado.data_fim)}</p>
+                        {(() => {
+                          const raw =
+                            (
+                              atestado as unknown as {
+                                periodo_afastamento?: unknown;
+                              }
+                            ).periodo_afastamento ?? null;
+                          let period: number | null = null;
+
+                          if (raw !== null && typeof raw !== "undefined") {
+                            const n = Number(raw);
+                            if (
+                              !Number.isNaN(n) &&
+                              Number.isFinite(n) &&
+                              n > 0
+                            ) {
+                              period = Math.trunc(n);
+                            }
+                          }
+
+                          if (period === null) {
+                            try {
+                              const s = new Date(atestado.data_inicio);
+                              const e = new Date(atestado.data_fim);
+                              if (!isNaN(s.getTime()) && !isNaN(e.getTime())) {
+                                const diffDays = Math.round(
+                                  (e.setHours(0, 0, 0, 0) -
+                                    s.setHours(0, 0, 0, 0)) /
+                                    (1000 * 60 * 60 * 24)
+                                );
+                                period = diffDays + 1;
+                              }
+                            } catch {
+                              period = null;
+                            }
+                          }
+
+                          if (period !== null) {
+                            return (
+                              <p className="text-sm text-muted-foreground">
+                                • Período: {period} dia{period > 1 ? "s" : ""}
+                              </p>
+                            );
+                          }
+
+                          return null;
+                        })()}
+                      </div>
                     </div>
                   </div>
 

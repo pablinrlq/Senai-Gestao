@@ -16,10 +16,12 @@ export async function POST(req: Request) {
 
     const validatedData = validation.data;
 
+    const uniqueField =
+      (validatedData as any).cargo === "USUARIO" ? "ra" : "registro_empregado";
     const { data: raRow, error: raErr } = await supabase
       .from("usuarios")
       .select("id")
-      .eq("ra", validatedData.ra)
+      .eq(uniqueField, validatedData.ra)
       .limit(1)
       .maybeSingle();
 
@@ -69,7 +71,7 @@ export async function POST(req: Request) {
         const { data: raRow2, error: raErr2 } = await supabase
           .from("usuarios")
           .select("id")
-          .eq("ra", validatedData.ra)
+          .eq(uniqueField, validatedData.ra)
           .limit(1)
           .maybeSingle();
 
@@ -84,7 +86,7 @@ export async function POST(req: Request) {
         try {
           const restUrl = `${
             process.env.SUPABASE_URL
-          }/rest/v1/usuarios?select=id&ra=eq.${encodeURIComponent(
+          }/rest/v1/usuarios?select=id&${uniqueField}=eq.${encodeURIComponent(
             validatedData.ra
           )}&limit=1`;
           console.log("RA uniqueness: using REST fallback to", restUrl);
@@ -116,7 +118,7 @@ export async function POST(req: Request) {
 
       if (raExists) {
         return NextResponse.json(
-          { error: "RA já está sendo usado por outro usuário" },
+          { error: "RE/RA já está sendo usado por outro usuário" },
           { status: 409 }
         );
       }
@@ -132,9 +134,14 @@ export async function POST(req: Request) {
       nome: validatedData.nome,
       email: validatedData.email,
       cargo: validatedData.cargo || "USUARIO",
-      ra: validatedData.ra,
       ...(body.metadata && { metadata: body.metadata }),
     };
+
+    if ((validatedData as any).cargo === "USUARIO") {
+      profile.ra = validatedData.ra;
+    } else if (validatedData.ra) {
+      profile.registro_empregado = validatedData.ra;
+    }
 
     if (validatedData.telefone) {
       profile.telefone = validatedData.telefone;
@@ -146,6 +153,13 @@ export async function POST(req: Request) {
 
     if ((validatedData as any).periodo) {
       profile.periodo = (validatedData as any).periodo;
+    }
+
+    if (
+      (validatedData as any).turma &&
+      String((validatedData as any).turma).trim() !== ""
+    ) {
+      profile.turma = (validatedData as any).turma;
     }
 
     try {
@@ -168,11 +182,13 @@ export async function POST(req: Request) {
       "email",
       "cargo",
       "ra",
+      "registro_empregado",
       "senha",
       "metadata",
       "telefone",
       "curso",
       "periodo",
+      "turma",
     ]);
 
     const insertPayload: Record<string, unknown> = {};

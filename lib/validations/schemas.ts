@@ -32,6 +32,8 @@ export const CreateUserSchema = UserSchema.omit({
   metadata: z.record(z.any()).optional(),
   curso: z.string().optional().nullable(),
   periodo: z.string().optional().nullable(),
+  turma: z.string().optional().nullable(),
+  registro_empregado: z.string().optional().nullable(),
   status: z
     .enum(["ativo", "inativo"], {
       errorMap: () => ({ message: "Status deve ser 'ativo' ou 'inativo'" }),
@@ -70,9 +72,12 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
 ];
 
-export const CreateAtestadoSchema = z.object({
+const CreateAtestadoBaseSchema = z.object({
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
-  data_fim: z.string().min(1, "Data de fim é obrigatória"),
+  periodo_afastamento: z
+    .number()
+    .min(1, "Período de afastamento deve ser de pelo menos 1 dia")
+    .max(365, "Período de afastamento não pode exceder 365 dias"),
   motivo: z.string().optional().default(""),
   status: z
     .enum(["pendente", "aprovado", "rejeitado"], {
@@ -82,21 +87,69 @@ export const CreateAtestadoSchema = z.object({
     })
     .default("pendente"),
   imagem_atestado: z
-    .instanceof(File)
-    .refine((file) => file.size <= MAX_FILE_SIZE, {
-      message: `O arquivo deve ter no máximo ${
-        MAX_FILE_SIZE / (1024 * 1024)
-      }MB`,
-    })
-    .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), {
-      message: "Tipos de arquivo aceitos: JPEG, JPG, PNG, WEBP",
-    })
+    .union([z.instanceof(File), z.undefined()])
+    .refine(
+      (file) => {
+        if (!file) return true;
+        return file.size <= MAX_FILE_SIZE;
+      },
+      {
+        message: `O arquivo deve ter no máximo ${
+          MAX_FILE_SIZE / (1024 * 1024)
+        }MB`,
+      }
+    )
+    .refine(
+      (file) => {
+        if (!file) return true;
+        return ACCEPTED_IMAGE_TYPES.includes(file.type);
+      },
+      {
+        message: "Tipos de arquivo aceitos: JPEG, JPG, PNG, WEBP",
+      }
+    )
     .optional(),
 });
 
-export const CreateAtestadoWithUserSchema = CreateAtestadoSchema.extend({
+export const CreateAtestadoSchema = CreateAtestadoBaseSchema.refine(
+  (data) => {
+    const startDate = new Date(data.data_inicio);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+
+    const diffTime = today.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays <= 5 && diffDays >= -365;
+  },
+  {
+    message:
+      "O atestado deve ser enviado no máximo 5 dias após a data de início",
+    path: ["data_inicio"],
+  }
+);
+
+export const CreateAtestadoWithUserSchema = CreateAtestadoBaseSchema.extend({
   id_usuario: z.string().min(1, "ID do usuário é obrigatório"),
-});
+}).refine(
+  (data) => {
+    const startDate = new Date(data.data_inicio);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+
+    const diffTime = today.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays <= 5 && diffDays >= -365;
+  },
+  {
+    message:
+      "O atestado deve ser enviado no máximo 5 dias após a data de início",
+    path: ["data_inicio"],
+  }
+);
 
 export const UpdateAtestadoStatusSchema = z.object({
   status: z.enum(["pendente", "aprovado", "rejeitado"], {

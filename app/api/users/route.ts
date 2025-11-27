@@ -47,15 +47,26 @@ export const POST = withFirebaseAdmin(async (req, db) => {
     }
 
     const { data, error } = await safeFirestoreOperation(async () => {
-      const docRef = await db.collection("usuarios").add({
+      const payload: Record<string, unknown> = {
         nome: validatedData.nome,
         email: validatedData.email,
         cargo: validatedData.cargo,
         telefone: validatedData.telefone,
-        ra: validatedData.ra,
         senha: validatedData.senha,
         createdAt: new Date().toISOString(),
-      });
+      };
+
+      if (validatedData.cargo === "USUARIO") {
+        payload.ra = validatedData.ra;
+      } else if (validatedData.ra) {
+        payload.registro_empregado = validatedData.ra;
+      }
+
+      if (validatedData.curso) payload.curso = validatedData.curso;
+      if (validatedData.periodo) payload.periodo = validatedData.periodo;
+      if (validatedData.turma) payload.turma = validatedData.turma;
+
+      const docRef = await db.collection("usuarios").add(payload);
       return { id: docRef.id };
     }, "Failed to create user");
 
