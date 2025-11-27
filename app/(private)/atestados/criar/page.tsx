@@ -28,14 +28,36 @@ interface Profile {
   ra_aluno: string | null;
 }
 
-const atestadoSchema = z.object({
-  dataInicio: z.string().min(1, "Data de início é obrigatória"),
-  dataFim: z.string().min(1, "Data de fim é obrigatória"),
-  motivo: z
-    .string()
-    .max(500, "Motivo deve ter no máximo 500 caracteres")
-    .optional(),
-});
+const atestadoSchema = z
+  .object({
+    dataInicio: z.string().min(1, "Data de início é obrigatória"),
+    periodoAfastamento: z
+      .number()
+      .min(1, "Período de afastamento deve ser de pelo menos 1 dia")
+      .max(365, "Período de afastamento não pode exceder 365 dias"),
+    motivo: z
+      .string()
+      .max(500, "Motivo deve ter no máximo 500 caracteres")
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      const startDate = new Date(data.dataInicio);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      startDate.setHours(0, 0, 0, 0);
+
+      const diffTime = today.getTime() - startDate.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      return diffDays <= 5;
+    },
+    {
+      message:
+        "O atestado deve ser enviado no máximo 5 dias após a data de início",
+      path: ["dataInicio"],
+    }
+  );
 
 export default function CriarAtestadoPage() {
   const router = useRouter();
@@ -139,27 +161,23 @@ export default function CriarAtestadoPage() {
     }
 
     const formData = new FormData(e.currentTarget);
+    const periodoAfastamentoStr = formData.get("periodoAfastamento") as string;
     const data = {
       dataInicio: formData.get("dataInicio") as string,
-      dataFim: formData.get("dataFim") as string,
+      periodoAfastamento: parseInt(periodoAfastamentoStr, 10),
       motivo: (formData.get("motivo") as string) || "",
     };
 
     try {
       const validated = atestadoSchema.parse(data);
 
-      // Validate dates
       const startDate = new Date(validated.dataInicio);
-      const endDate = new Date(validated.dataFim);
-
-      if (startDate > endDate) {
-        toast.error("Data de início não pode ser posterior à data de fim");
-        return;
-      }
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + validated.periodoAfastamento - 1);
 
       const createData = {
         data_inicio: validated.dataInicio,
-        data_fim: validated.dataFim,
+        periodo_afastamento: validated.periodoAfastamento,
         motivo: validated.motivo || "",
         status: "pendente" as const,
         imagem_atestado: uploadedFile,
@@ -241,14 +259,22 @@ export default function CriarAtestadoPage() {
                       required
                       className="w-full"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Máximo 5 dias de tolerância para envio
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="dataFim">Data de Fim *</Label>
+                    <Label htmlFor="periodoAfastamento">
+                      Período de Afastamento (dias) *
+                    </Label>
                     <Input
-                      id="dataFim"
-                      name="dataFim"
-                      type="date"
+                      id="periodoAfastamento"
+                      name="periodoAfastamento"
+                      type="number"
+                      min="1"
+                      max="365"
                       required
+                      placeholder="Ex: 3"
                       className="w-full"
                     />
                   </div>

@@ -40,7 +40,7 @@ export function CreateAtestadoForm({ onSuccess }: CreateAtestadoFormProps) {
     resolver: zodResolver(CreateAtestadoSchema),
     defaultValues: {
       data_inicio: "",
-      data_fim: "",
+      periodo_afastamento: 1,
       motivo: "",
       status: "pendente",
     },
@@ -74,6 +74,9 @@ export function CreateAtestadoForm({ onSuccess }: CreateAtestadoFormProps) {
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
+                  <FormDescription>
+                    Máximo 5 dias de tolerância para envio
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -81,12 +84,21 @@ export function CreateAtestadoForm({ onSuccess }: CreateAtestadoFormProps) {
 
             <FormField
               control={form.control}
-              name="data_fim"
+              name="periodo_afastamento"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Data de Fim</FormLabel>
+                  <FormLabel>Período de Afastamento (dias)</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input
+                      type="number"
+                      min="1"
+                      max="365"
+                      placeholder="Ex: 3"
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(parseInt(e.target.value, 10))
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

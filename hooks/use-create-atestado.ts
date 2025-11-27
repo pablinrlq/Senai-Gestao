@@ -6,7 +6,7 @@ const createAtestadoWithFormData = async (
 ): Promise<{ id: string }> => {
   const formData = new FormData();
   formData.append("data_inicio", data.data_inicio);
-  formData.append("data_fim", data.data_fim);
+  formData.append("periodo_afastamento", data.periodo_afastamento.toString());
   formData.append("motivo", data.motivo);
   formData.append("status", data.status);
 

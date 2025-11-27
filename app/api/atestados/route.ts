@@ -192,6 +192,12 @@ export const GET = withFirebaseAdmin(async (req, db) => {
               data.observacoes_admin || data.observacoesAdmin || null,
             data_inicio: toDateOrString(data.data_inicio ?? data.dataInicio),
             data_fim: toDateOrString(data.data_fim ?? data.dataFim),
+            periodo_afastamento:
+              typeof data.periodo_afastamento === "number"
+                ? data.periodo_afastamento
+                : data.periodo_afastamento
+                ? parseInt(String(data.periodo_afastamento), 10)
+                : null,
             usuario: usuario ?? null,
             createdAt: toDateOrString(data.created_at ?? data.createdAt),
           };
@@ -230,16 +236,42 @@ export const POST = withFirebaseAdmin(async (req, db) => {
 
     const formData = await req.formData();
 
-    const data = {
+    const periodoAfastamentoStr = formData.get("periodo_afastamento");
+    const periodoAfastamento = periodoAfastamentoStr
+      ? parseInt(periodoAfastamentoStr as string, 10)
+      : undefined;
+
+    console.log("[API] Received form data:", {
       data_inicio: formData.get("data_inicio"),
-      data_fim: formData.get("data_fim"),
+      periodo_afastamento: periodoAfastamento,
       motivo: formData.get("motivo"),
-      status: formData.get("status") || "pendente",
-      imagem_atestado: formData.get("imagem_atestado"),
+      status: formData.get("status"),
+      has_image: formData.has("imagem_atestado"),
+    });
+
+    if (!periodoAfastamento || isNaN(periodoAfastamento)) {
+      return NextResponse.json(
+        {
+          error: "Dados inválidos",
+          details: [
+            "periodo_afastamento: Período de afastamento é obrigatório e deve ser um número válido",
+          ],
+        },
+        { status: 400 }
+      );
+    }
+
+    const data = {
+      data_inicio: formData.get("data_inicio") as string,
+      periodo_afastamento: periodoAfastamento,
+      motivo: (formData.get("motivo") as string) || "",
+      status: (formData.get("status") as string) || "pendente",
+      imagem_atestado: formData.get("imagem_atestado") as File | undefined,
     };
 
     const validationResult = CreateAtestadoSchema.safeParse(data);
     if (!validationResult.success) {
+      console.error("[API] Validation failed:", validationResult.error.errors);
       return NextResponse.json(
         {
           error: "Dados inválidos",
@@ -328,16 +360,31 @@ export const POST = withFirebaseAdmin(async (req, db) => {
 
     const { data: createdData, error } = await safeFirestoreOperation(
       async () => {
+        const startDate = new Date(validatedData.data_inicio);
+        const endDate = new Date(startDate);
+        endDate.setDate(
+          startDate.getDate() + validatedData.periodo_afastamento - 1
+        );
+        const dataFim = endDate.toISOString().split("T")[0];
+
         const payload: Record<string, unknown> = {
           id_usuario: authResult.uid,
           data_inicio: validatedData.data_inicio,
-          data_fim: validatedData.data_fim,
+          data_fim: dataFim,
           motivo: validatedData.motivo,
           imagem_atestado: imageUrl,
           imagem_path: imagePath,
           status: validatedData.status,
           created_at: new Date().toISOString(),
         };
+
+        // Include periodo_afastamento only if present to avoid DB errors when column doesn't exist
+        if (
+          typeof validatedData.periodo_afastamento !== "undefined" &&
+          validatedData.periodo_afastamento !== null
+        ) {
+          payload.periodo_afastamento = validatedData.periodo_afastamento;
+        }
 
         const docRef = await db.collection("atestados").add(payload);
         return { id: docRef.id };
