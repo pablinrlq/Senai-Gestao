@@ -83,7 +83,12 @@ export default function Usuarios() {
 
       const data = await response.json();
 
-      if (data.user?.tipo_usuario !== "administrador") {
+      if (
+        !(
+          data.user?.tipo_usuario === "administrador" ||
+          data.user?.tipo_usuario === "funcionario"
+        )
+      ) {
         toast.error("Acesso negado");
         router.push("/dashboard");
         return;

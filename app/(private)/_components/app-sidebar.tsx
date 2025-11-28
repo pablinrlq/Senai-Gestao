@@ -66,10 +66,10 @@ const adminItems = [
 interface AppSidebarProps {
   userName?: string;
   userEmail?: string;
-  isAdmin?: boolean;
+  role?: string;
 }
 
-export function AppSidebar({ userName, userEmail, isAdmin }: AppSidebarProps) {
+export function AppSidebar({ userName, userEmail, role }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -88,6 +88,14 @@ export function AppSidebar({ userName, userEmail, isAdmin }: AppSidebarProps) {
     }
     return name.slice(0, 2).toUpperCase();
   };
+
+  const isAdminUser = role === "administrador";
+  const isFuncionario = role === "funcionario";
+  const showAdminGroup = isAdminUser || isFuncionario;
+
+  const displayedAdminItems = adminItems.filter(
+    (item) => !(isFuncionario && item.url === "/admin/create-user")
+  );
 
   return (
     <Sidebar>
@@ -110,12 +118,12 @@ export function AppSidebar({ userName, userEmail, isAdmin }: AppSidebarProps) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {isAdmin && (
+        {showAdminGroup && (
           <SidebarGroup>
             <SidebarGroupLabel>Administração</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminItems.map((item) => (
+                {displayedAdminItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={pathname === item.url}>
                       <Link href={item.url}>

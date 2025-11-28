@@ -67,7 +67,12 @@ export default function Dashboard() {
 
       const data = await response.json();
 
-      if (data.user?.tipo_usuario !== "administrador") {
+      if (
+        !(
+          data.user?.tipo_usuario === "administrador" ||
+          data.user?.tipo_usuario === "funcionario"
+        )
+      ) {
         router.push("/atestados");
         return;
       }
@@ -150,7 +155,13 @@ export default function Dashboard() {
     );
   }
 
-  if (!profile || profile.tipo_usuario !== "administrador") {
+  if (
+    !profile ||
+    !(
+      profile.tipo_usuario === "administrador" ||
+      profile.tipo_usuario === "funcionario"
+    )
+  ) {
     return null;
   }
 

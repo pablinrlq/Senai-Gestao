@@ -95,7 +95,10 @@ export default function PrivateLayout({
 
         if (
           pathname.startsWith("/admin") &&
-          data.user?.tipo_usuario !== "administrador"
+          !(
+            data.user?.tipo_usuario === "administrador" ||
+            data.user?.tipo_usuario === "funcionario"
+          )
         ) {
           toast.error("Acesso negado. Esta área é restrita a administradores.");
           router.push("/dashboard");
@@ -131,7 +134,8 @@ export default function PrivateLayout({
   }
 
   const isAdminRoute =
-    user.tipo_usuario === "administrador" &&
+    (user.tipo_usuario === "administrador" ||
+      user.tipo_usuario === "funcionario") &&
     (pathname.startsWith("/admin") || pathname === "/dashboard");
 
   const isAdmin = user.tipo_usuario === "administrador";
@@ -145,7 +149,7 @@ export default function PrivateLayout({
       <AppSidebar
         userName={user.nome}
         userEmail={user.email}
-        isAdmin={isAdmin}
+        role={user.tipo_usuario}
       />
       <SidebarInset className="md:ml-45">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background sticky top-0 z-50">

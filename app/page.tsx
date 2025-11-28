@@ -16,7 +16,10 @@ export default function Home() {
       })
         .then((response) => response.json())
         .then((data) => {
-          if (data.user?.tipo_usuario === "administrador") {
+          if (
+            data.user?.tipo_usuario === "administrador" ||
+            data.user?.tipo_usuario === "funcionario"
+          ) {
             router.push("/admin");
           } else {
             router.push("/dashboard");
