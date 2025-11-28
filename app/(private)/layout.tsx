@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Separator } from "@/components/ui/separator";
@@ -145,11 +149,25 @@ export default function PrivateLayout({
       />
       <SidebarInset className="md:ml-45">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background sticky top-0 z-50">
-          <Link href="/dashboard" className="-ml-1">
-            <Logo />
+          <div className="md:hidden mr-2">
+            <SidebarTrigger />
+          </div>
+
+          <Link href="/dashboard" className="-ml-1 flex items-center">
+            <Logo className="transform scale-90 md:scale-100" />
           </Link>
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <AppBreadcrumb />
+
+          <div className="flex-1">
+            <div className="hidden md:block">
+              <AppBreadcrumb />
+            </div>
+            <div className="block md:hidden">
+              <div className="text-sm">
+                <AppBreadcrumb />
+              </div>
+            </div>
+          </div>
         </header>
         <div className="flex-1 p-0">{children}</div>
       </SidebarInset>

@@ -29,17 +29,13 @@ export function AppBreadcrumb() {
 
   const pathSegments = pathname.split("/").filter((segment) => segment !== "");
 
-  const breadcrumbs = pathSegments.map((segment, index) => {
-    const href = "/" + pathSegments.slice(0, index + 1).join("/");
-    const label =
-      breadcrumbLabels[segment] ??
-      segment.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-
-    return {
-      label,
-      href,
-    };
-  });
+  const lastSegment =
+    pathSegments.length > 0
+      ? pathSegments[pathSegments.length - 1]
+      : "dashboard";
+  const currentLabel =
+    breadcrumbLabels[lastSegment] ??
+    lastSegment.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
   return (
     <Breadcrumb>
@@ -49,24 +45,16 @@ export function AppBreadcrumb() {
             <Link href="/dashboard">Início</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
-        {breadcrumbs.map((crumb, index) => (
-          <Fragment key={crumb.href}>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              {index === breadcrumbs.length - 1 ? (
-                <BreadcrumbPage
-                  className={cn("text-blue-600 dark:text-blue-400 font-medium")}
-                >
-                  {crumb.label}
-                </BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink asChild>
-                  <Link href={crumb.href}>{crumb.label}</Link>
-                </BreadcrumbLink>
-              )}
-            </BreadcrumbItem>
-          </Fragment>
-        ))}
+
+        <BreadcrumbSeparator />
+
+        <BreadcrumbItem>
+          <BreadcrumbPage
+            className={cn("text-blue-600 dark:text-blue-400 font-medium")}
+          >
+            {currentLabel}
+          </BreadcrumbPage>
+        </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
   );
