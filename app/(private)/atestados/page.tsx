@@ -10,9 +10,11 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  LogOut,
   Download,
+  LogOut,
 } from "lucide-react";
+import { Logo } from "@/components/Logo";
+import ProfilePill from "@/components/ProfilePill";
 
 import {
   Card,
@@ -23,7 +25,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Logo } from "@/components/Logo";
 import { formatDate } from "@/utils/formatDate";
 import {
   Dialog,
@@ -33,7 +34,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import ProfilePill from "@/components/ProfilePill";
 
 interface AtestadoData {
   id: string;

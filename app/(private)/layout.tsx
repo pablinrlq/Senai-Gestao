@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import Link from "next/link";
+import { Logo } from "@/components/Logo";
+import { Separator } from "@/components/ui/separator";
+import { AppSidebar } from "./_components/app-sidebar";
+import { AppBreadcrumb } from "./_components/app-breadcrumb";
 
 interface User {
   nome: string;
@@ -85,7 +95,10 @@ export default function PrivateLayout({
 
         if (
           pathname.startsWith("/admin") &&
-          data.user?.tipo_usuario !== "administrador"
+          !(
+            data.user?.tipo_usuario === "administrador" ||
+            data.user?.tipo_usuario === "funcionario"
+          )
         ) {
           toast.error("Acesso negado. Esta área é restrita a administradores.");
           router.push("/dashboard");
@@ -120,5 +133,45 @@ export default function PrivateLayout({
     return null;
   }
 
-  return <>{children}</>;
+  const isPrivilegedUser =
+    user.tipo_usuario === "administrador" ||
+    user.tipo_usuario === "funcionario";
+
+  if (!isPrivilegedUser) {
+    return <>{children}</>;
+  }
+
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <AppSidebar
+        userName={user.nome}
+        userEmail={user.email}
+        role={user.tipo_usuario}
+      />
+      <SidebarInset className="md:ml-60">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background sticky top-0 z-40">
+          <div className="md:hidden mr-2">
+            <SidebarTrigger />
+          </div>
+
+          <Link href="/dashboard" className="-ml-1 flex items-center">
+            <Logo className="transform scale-90 md:scale-100" />
+          </Link>
+          <Separator orientation="vertical" className="mr-2 h-4" />
+
+          <div className="flex-1">
+            <div className="hidden md:block">
+              <AppBreadcrumb />
+            </div>
+            <div className="block md:hidden">
+              <div className="text-sm">
+                <AppBreadcrumb />
+              </div>
+            </div>
+          </div>
+        </header>
+        <div className="flex-1 p-0">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }

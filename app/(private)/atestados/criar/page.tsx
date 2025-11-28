@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { Upload, X } from "lucide-react";
 
 import {
   Card,
@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Logo } from "@/components/Logo";
 import { useCreateAtestado } from "@/hooks/use-create-atestado";
 
 interface Profile {
@@ -210,25 +209,6 @@ export default function CriarAtestadoPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto flex items-center gap-4 px-4 py-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/atestados")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Logo />
-          <div className="ml-auto">
-            <p className="text-sm font-medium">{profile.nome}</p>
-            <p className="text-xs text-muted-foreground">
-              RA: {profile.ra_aluno}
-            </p>
-          </div>
-        </div>
-      </header>
-
       <main className="container mx-auto p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">

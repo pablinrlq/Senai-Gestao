@@ -12,20 +12,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Logo } from "@/components/Logo";
-import ProfilePill from "@/components/ProfilePill";
 interface SimpleProfile {
   nome: string;
   tipo_usuario?: string;
 }
-import {
-  ArrowLeft,
-  Search,
-  User,
-  FileText,
-  Trash,
-  UserPlus,
-} from "lucide-react";
+import { Search, User, FileText, Trash, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDateForDisplay } from "@/utils/formatDate";
 import {
@@ -92,7 +83,12 @@ export default function Usuarios() {
 
       const data = await response.json();
 
-      if (data.user?.tipo_usuario !== "administrador") {
+      if (
+        !(
+          data.user?.tipo_usuario === "administrador" ||
+          data.user?.tipo_usuario === "funcionario"
+        )
+      ) {
         toast.error("Acesso negado");
         router.push("/dashboard");
         return;
@@ -275,27 +271,6 @@ export default function Usuarios() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push("/dashboard")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <Logo />
-          </div>
-
-          <div>
-            {profile ? (
-              <ProfilePill name={profile.nome} role={profile.tipo_usuario} />
-            ) : null}
-          </div>
-        </div>
-      </header>
-
       <main className="container mx-auto p-4 md:p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-primary mb-2">
