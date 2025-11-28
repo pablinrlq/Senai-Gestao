@@ -186,7 +186,7 @@ const CreateAdmin = () => {
 
       (e.target as HTMLFormElement).reset();
       setTimeout(() => {
-        router.push("/admin");
+        router.push("/dashboard");
       }, 600);
     } catch (error) {
       if (error instanceof Error) {
