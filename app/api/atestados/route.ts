@@ -49,8 +49,10 @@ export const GET = withFirebaseAdmin(async (req, db) => {
   }
 
   const requestedUserId = userId ?? currUser.id;
+  const cargo = String(currUser.get("cargo") ?? "").toUpperCase();
+  const isLimitedUser = cargo === "USUARIO" || cargo === "FUNCIONARIO";
 
-  if (currUser.get("cargo") === "USUARIO" && requestedUserId !== currUser.id) {
+  if (isLimitedUser && requestedUserId !== currUser.id) {
     return NextResponse.json(
       { error: "Usuário não autorizado a acessar esses atestados" },
       { status: 403 }
@@ -60,7 +62,7 @@ export const GET = withFirebaseAdmin(async (req, db) => {
   const { data, error } = await safeFirestoreOperation(async () => {
     let atestadosQuery = db.collection("atestados");
 
-    if (userId || currUser.get("cargo") === "USUARIO") {
+    if (userId || isLimitedUser) {
       atestadosQuery = atestadosQuery.where(
         "id_usuario",
         "==",

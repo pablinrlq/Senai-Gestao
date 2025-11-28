@@ -29,14 +29,18 @@ export async function GET(req: NextRequest) {
 
     const userData = userDoc.data();
 
+    const cargo = String(userData?.cargo || "").toUpperCase();
+    let tipo_usuario = "aluno";
+    if (cargo === "ADMINISTRADOR") tipo_usuario = "administrador";
+    else if (cargo === "FUNCIONARIO") tipo_usuario = "funcionario";
+
     return NextResponse.json({
       success: true,
       user: {
         id: userDoc.id,
         email: userData?.email,
         nome: userData?.nome,
-        tipo_usuario:
-          userData?.cargo === "ADMINISTRADOR" ? "administrador" : "aluno",
+        tipo_usuario,
         ra_aluno: userData?.ra,
       },
     });

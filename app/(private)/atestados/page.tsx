@@ -233,7 +233,18 @@ export default function AtestadosPage() {
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <Logo />
           <div className="flex items-center gap-4">
-            <ProfilePill name={profile?.nome} role="Aluno" size="md" />
+            <ProfilePill
+              name={profile?.nome}
+              role={
+                profile?.tipo_usuario
+                  ? profile.tipo_usuario === "funcionario"
+                    ? "Funcionário"
+                    : profile.tipo_usuario.charAt(0).toUpperCase() +
+                      profile.tipo_usuario.slice(1)
+                  : "Aluno"
+              }
+              size="md"
+            />
             <Button
               variant="ghost"
               size="icon"
