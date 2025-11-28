@@ -27,10 +27,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Logo } from "@/components/Logo";
-import ProfilePill from "@/components/ProfilePill";
 import {
-  ArrowLeft,
   Users,
   FileText,
   Settings,
@@ -453,26 +450,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto flex items-center gap-4 px-4 py-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/dashboard")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Logo />
-          <div className="ml-auto flex items-center gap-4">
-            <ProfilePill
-              name={profile.nome}
-              role={profile.tipo_usuario}
-              size="sm"
-            />
-          </div>
-        </div>
-      </header>
-
       <main className="container mx-auto p-4 md:p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-primary mb-2">

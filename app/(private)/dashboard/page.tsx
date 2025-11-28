@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,9 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Logo } from "@/components/Logo";
-import ProfilePill from "@/components/ProfilePill";
-import { FileText, LogOut, UserCircle, User, UserPlus } from "lucide-react";
+import {
+  FileText,
+  Users,
+  CheckCircle,
+  Clock,
+  XCircle,
+  TrendingUp,
+} from "lucide-react";
 
 interface Profile {
   nome: string;
@@ -22,10 +26,25 @@ interface Profile {
   ra_aluno: string | null;
 }
 
+interface Stats {
+  totalUsuarios: number;
+  totalAtestados: number;
+  atestadosPendentes: number;
+  atestadosAprovados: number;
+  atestadosRejeitados: number;
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<Stats>({
+    totalUsuarios: 0,
+    totalAtestados: 0,
+    atestadosPendentes: 0,
+    atestadosAprovados: 0,
+    atestadosRejeitados: 0,
+  });
 
   const fetchProfile = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -65,16 +84,63 @@ export default function Dashboard() {
     }
   }, [router]);
 
+  const fetchStats = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const usersResponse = await fetch("/api/usuarios", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const atestadosResponse = await fetch("/api/admin/atestados", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        setStats((prev) => ({
+          ...prev,
+          totalUsuarios: usersData.usuarios?.length || 0,
+        }));
+      }
+
+      if (atestadosResponse.ok) {
+        const atestadosData = await atestadosResponse.json();
+        const atestados = atestadosData.data || [];
+
+        setStats((prev) => ({
+          ...prev,
+          totalAtestados: atestados.length,
+          atestadosPendentes: atestados.filter(
+            (a: { status: string }) => a.status === "pendente"
+          ).length,
+          atestadosAprovados: atestados.filter(
+            (a: { status: string }) => a.status === "aprovado"
+          ).length,
+          atestadosRejeitados: atestados.filter(
+            (a: { status: string }) => a.status === "rejeitado"
+          ).length,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
-  const handleLogout = async () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    toast.success("Logout realizado");
-    router.push("/auth/login");
-  };
+  useEffect(() => {
+    if (profile) {
+      fetchStats();
+    }
+  }, [profile, fetchStats]);
 
   if (loading) {
     return (
@@ -89,109 +155,186 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-white relative overflow-hidden">
-      <div className="pointer-events-none absolute -top-12 left-4 w-56 h-56 rounded-full bg-blue-200/20 blur-3xl transform -rotate-6"></div>
-      <div className="pointer-events-none absolute -bottom-16 right-8 w-72 h-72 rounded-full bg-indigo-200/20 blur-3xl transform rotate-6"></div>
-
-      <header className="border-b bg-white/75 backdrop-blur-md shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Logo />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <ProfilePill name={profile?.nome} role="Administrador" size="md" />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="hover:bg-red-50 hover:text-red-600 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-        <div className="h-px bg-linear-to-r from-blue-50 to-indigo-50" />
-      </header>
-
-      <main className="container mx-auto p-4 md:p-8 relative z-10">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-white">
+      <main className="container mx-auto p-4 md:p-8">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Painel Administrativo
+            Bem-vindo, {profile.nome.split(" ")[0]}!
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
-            Gerencie atestados médicos e usuários do sistema
+          <p className="text-muted-foreground">
+            Visão geral do sistema de gerenciamento de atestados
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card
-            className="transform-gpu hover:scale-[1.02] hover:shadow-xl transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm border border-slate-200"
-            onClick={() => router.push("/admin/atestados")}
-          >
-            <CardHeader>
-              <FileText className="h-10 w-10 text-primary mb-2" />
-              <CardTitle>Revisar Atestados</CardTitle>
-              <CardDescription>
-                Analise e aprove atestados enviados pelos alunos
-              </CardDescription>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total de Usuários
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <Button className="w-full cursor-pointer bg-linear-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-md">
-                Revisar
-              </Button>
+              <div className="text-2xl font-bold">{stats.totalUsuarios}</div>
+              <p className="text-xs text-muted-foreground">
+                Usuários cadastrados no sistema
+              </p>
             </CardContent>
           </Card>
 
-          <Card
-            className="transform-gpu hover:scale-[1.02] hover:shadow-xl transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm border border-slate-200"
-            onClick={() => router.push("/admin/usuarios")}
-          >
-            <CardHeader>
-              <User className="h-10 w-10 text-secondary mb-2" />
-              <CardTitle>Gerenciar Usuários</CardTitle>
-              <CardDescription>
-                Visualize e gerencie usuários existentes
-              </CardDescription>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total de Atestados
+              </CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <Button className="w-full cursor-pointer bg-linear-to-r from-orange-400 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600 shadow-md">
-                Gerenciar
-              </Button>
+              <div className="text-2xl font-bold">{stats.totalAtestados}</div>
+              <p className="text-xs text-muted-foreground">
+                Atestados enviados ao sistema
+              </p>
             </CardContent>
           </Card>
 
-          <Card
-            className="transform-gpu hover:scale-[1.02] hover:shadow-xl transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm border border-slate-200"
-            onClick={() => router.push("/admin/create-user")}
-          >
-            <CardHeader>
-              <UserPlus className="h-10 w-10 text-green-600 mb-2" />
-              <CardTitle>Criar Usuário</CardTitle>
-              <CardDescription>
-                Adicione novos administradores e funcionários
-              </CardDescription>
+          <Card className="hover:shadow-lg transition-shadow border-yellow-200 bg-yellow-50/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Atestados Pendentes
+              </CardTitle>
+              <Clock className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-white/60 border cursor-pointer border-slate-200 bg-linear-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-sm">
-                Criar
-              </Button>
+              <div className="text-2xl font-bold text-yellow-700">
+                {stats.atestadosPendentes}
+              </div>
+              <p className="text-xs text-yellow-600">Aguardando sua revisão</p>
             </CardContent>
           </Card>
 
-          <Card
-            className="transform-gpu hover:scale-[1.02] hover:shadow-xl transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm border border-slate-200"
-            onClick={() => router.push("/perfil")}
-          >
-            <CardHeader>
-              <UserCircle className="h-10 w-10 text-accent mb-2" />
-              <CardTitle>Meu Perfil</CardTitle>
-              <CardDescription>Visualize suas informações</CardDescription>
+          <Card className="hover:shadow-lg transition-shadow border-green-200 bg-green-50/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Atestados Aprovados
+              </CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <Button className="w-full border cursor-pointer border-slate-200 bg-blue-500 shadow-sm">
-                Ver Perfil
-              </Button>
+              <div className="text-2xl font-bold text-green-700">
+                {stats.atestadosAprovados}
+              </div>
+              <p className="text-xs text-green-600">Revisados e aprovados</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow border-red-200 bg-red-50/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Atestados Rejeitados
+              </CardTitle>
+              <XCircle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-700">
+                {stats.atestadosRejeitados}
+              </div>
+              <p className="text-xs text-red-600">Não atenderam critérios</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow border-blue-200 bg-blue-50/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Taxa de Aprovação
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-700">
+                {stats.totalAtestados > 0
+                  ? Math.round(
+                      (stats.atestadosAprovados / stats.totalAtestados) * 100
+                    )
+                  : 0}
+                %
+              </div>
+              <p className="text-xs text-blue-600">
+                Atestados aprovados do total
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-yellow-600" />
+                Ações Pendentes
+              </CardTitle>
+              <CardDescription>
+                Tarefas que requerem sua atenção
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {stats.atestadosPendentes > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-yellow-600" />
+                      <div>
+                        <p className="font-medium text-sm">Revisar Atestados</p>
+                        <p className="text-xs text-muted-foreground">
+                          {stats.atestadosPendentes}{" "}
+                          {stats.atestadosPendentes === 1
+                            ? "atestado pendente"
+                            : "atestados pendentes"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Não há atestados pendentes no momento! 🎉
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Acesso Rápido</CardTitle>
+              <CardDescription>Links úteis para administração</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <button
+                  onClick={() => router.push("/admin/atestados")}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-blue-50 rounded-lg border border-blue-200 transition-colors"
+                >
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  <div className="text-left">
+                    <p className="font-medium text-sm">Revisar Atestados</p>
+                    <p className="text-xs text-muted-foreground">
+                      Ver todos os atestados
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => router.push("/admin/usuarios")}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-orange-50 rounded-lg border border-orange-200 transition-colors"
+                >
+                  <Users className="h-5 w-5 text-orange-600" />
+                  <div className="text-left">
+                    <p className="font-medium text-sm">Gerenciar Usuários</p>
+                    <p className="text-xs text-muted-foreground">
+                      Ver todos os usuários
+                    </p>
+                  </div>
+                </button>
+              </div>
             </CardContent>
           </Card>
         </div>
