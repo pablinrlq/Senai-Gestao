@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "./_components/app-sidebar";
 import { AppBreadcrumb } from "./_components/app-breadcrumb";
@@ -146,13 +144,15 @@ export default function PrivateLayout({
         userEmail={user.email}
         isAdmin={isAdmin}
       />
-      <SidebarInset>
+      <SidebarInset className="md:ml-45">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background sticky top-0 z-10">
-          <SidebarTrigger className="-ml-1" />
+          <Link href="/dashboard" className="-ml-1">
+            <Logo />
+          </Link>
           <Separator orientation="vertical" className="mr-2 h-4" />
           <AppBreadcrumb />
         </header>
-        <div className="flex-1 p-6">{children}</div>
+        <div className="flex-1 p-0">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

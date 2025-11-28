@@ -39,11 +39,6 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Meus Atestados",
-    url: "/atestados",
-    icon: FileText,
-  },
-  {
     title: "Meu Perfil",
     url: "/perfil",
     icon: User,
@@ -96,19 +91,7 @@ export function AppSidebar({ userName, userEmail, isAdmin }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b p-4">
-        <Link href="/dashboard">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">SG</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-semibold text-sm">SENAI</span>
-              <span className="text-xs text-muted-foreground">Gestão</span>
-            </div>
-          </div>
-        </Link>
-      </SidebarHeader>
+      <SidebarHeader className="p-2" />
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
