@@ -27,11 +27,15 @@ export async function GET(req: NextRequest) {
     }
 
     const userData = userDoc.data();
-    if (userData?.cargo !== "ADMINISTRADOR") {
+    if (
+      !(
+        userData?.cargo === "ADMINISTRADOR" || userData?.cargo === "FUNCIONARIO"
+      )
+    ) {
       return NextResponse.json(
         {
           error:
-            "Acesso negado. Apenas administradores podem acessar esta função.",
+            "Acesso negado. Apenas administradores ou funcionários podem acessar esta função.",
         },
         { status: 403 }
       );

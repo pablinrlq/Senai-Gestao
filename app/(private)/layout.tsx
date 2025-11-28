@@ -133,14 +133,11 @@ export default function PrivateLayout({
     return null;
   }
 
-  const isAdminRoute =
-    (user.tipo_usuario === "administrador" ||
-      user.tipo_usuario === "funcionario") &&
-    (pathname.startsWith("/admin") || pathname === "/dashboard");
+  const isPrivilegedUser =
+    user.tipo_usuario === "administrador" ||
+    user.tipo_usuario === "funcionario";
 
-  const isAdmin = user.tipo_usuario === "administrador";
-
-  if (!isAdminRoute && !isAdmin) {
+  if (!isPrivilegedUser) {
     return <>{children}</>;
   }
 

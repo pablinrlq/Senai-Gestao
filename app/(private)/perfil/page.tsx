@@ -73,6 +73,7 @@ export default function Perfil() {
   }
 
   const getTipoBadge = (tipo: string) => {
+    const key = (tipo || "").toString().toLowerCase();
     const variants: Record<
       string,
       { variant: "default" | "secondary" | "destructive"; label: string }
@@ -80,16 +81,17 @@ export default function Perfil() {
       aluno: { variant: "default", label: "Aluno" },
       professor: { variant: "secondary", label: "Professor" },
       administrador: { variant: "destructive", label: "Administrador" },
+      funcionario: { variant: "secondary", label: "Funcionário" },
     };
 
-    const { variant, label } = variants[tipo] || variants.aluno;
+    const { variant, label } = variants[key] || variants.aluno;
     return <Badge variant={variant}>{label}</Badge>;
   };
 
   return (
     <div className="min-h-screen bg-background">
       <main className="px-4 py-6 sm:px-6 md:px-8">
-        <div className="mb-8">
+        <div className="mb-8  ml-10">
           <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2">
             Meu Perfil
           </h1>

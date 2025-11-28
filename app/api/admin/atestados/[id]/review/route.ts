@@ -23,7 +23,13 @@ export async function PATCH(
     }
 
     const userDoc = await db.collection("usuarios").doc(decodedToken.uid).get();
-    if (!userDoc.exists || userDoc.data()?.cargo !== "ADMINISTRADOR") {
+    if (
+      !userDoc.exists ||
+      !(
+        userDoc.data()?.cargo === "ADMINISTRADOR" ||
+        userDoc.data()?.cargo === "FUNCIONARIO"
+      )
+    ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 

@@ -50,7 +50,7 @@ export const GET = withFirebaseAdmin(async (req, db) => {
 
   const requestedUserId = userId ?? currUser.id;
   const cargo = String(currUser.get("cargo") ?? "").toUpperCase();
-  const isLimitedUser = cargo === "USUARIO" || cargo === "FUNCIONARIO";
+  const isLimitedUser = cargo === "USUARIO";
 
   if (isLimitedUser && requestedUserId !== currUser.id) {
     return NextResponse.json(
