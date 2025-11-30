@@ -16,14 +16,14 @@ import {
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { z } from "zod";
-import { ArrowLeft, Eye, EyeOff, UserCog, User } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
 const studentSignupSchema = z
   .object({
     nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
     email: z.string().email("Email deve ter um formato válido"),
-    ra: z.string().min(1, "RE/RA é obrigatório"),
+    ra: z.string().min(1, "RA é obrigatório"),
     telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
     senha: z
       .string()
@@ -36,37 +36,14 @@ const studentSignupSchema = z
         "Senha deve conter pelo menos um caractere especial"
       ),
     confirmarSenha: z.string(),
-    curso: z.string().optional().nullable(),
-    periodo: z.string().optional().nullable(),
-    turma: z.string().optional().nullable(),
-    cargo: z
-      .enum(["ADMINISTRADOR", "USUARIO", "FUNCIONARIO"], {
-        errorMap: () => ({ message: "Cargo inválido" }),
-      })
-      .optional()
-      .default("USUARIO"),
+    curso: z.string().min(1, "Curso é obrigatório"),
+    periodo: z.string().min(1, "Período é obrigatório"),
+    turma: z.string().min(1, "Turma é obrigatória"),
+    cargo: z.literal("USUARIO"),
   })
   .refine((data) => data.senha === data.confirmarSenha, {
     message: "Senhas não coincidem",
     path: ["confirmarSenha"],
-  })
-  .superRefine((data, ctx) => {
-    if (data.cargo === "USUARIO") {
-      if (!data.curso || String(data.curso).trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["curso"],
-          message: "Curso é obrigatório",
-        });
-      }
-      if (!data.periodo || String(data.periodo).trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["periodo"],
-          message: "Período é obrigatório",
-        });
-      }
-    }
   });
 
 const StudentSignup = () => {
@@ -78,9 +55,7 @@ const StudentSignup = () => {
   const [curso, setCurso] = useState("");
   const [periodo, setPeriodo] = useState("");
   const [turma, setTurma] = useState("");
-  const [cargo, setCargo] = useState<
-    "ADMINISTRADOR" | "USUARIO" | "FUNCIONARIO"
-  >("USUARIO");
+  const cargo = "USUARIO";
 
   const passwordRequirements = [
     { text: "No mínimo 8 caracteres", met: passwordValue.length >= 8 },
@@ -121,18 +96,12 @@ const StudentSignup = () => {
         return;
       }
 
-      const createUserData = {
-        ...validationResult.data,
-      };
-      if (!createUserData.turma || String(createUserData.turma).trim() === "")
-        delete createUserData.turma;
-
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(createUserData),
+        body: JSON.stringify(validationResult.data),
       });
 
       const result = await response.json();
@@ -201,17 +170,13 @@ const StudentSignup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="signup-ra" className="text-gray-700">
-                  {cargo === "USUARIO"
-                    ? "RA *"
-                    : "RE (Registro de Empregado) *"}
+                  RA *
                 </Label>
                 <Input
                   id="signup-ra"
                   name="ra"
                   type="text"
-                  placeholder={
-                    cargo === "USUARIO" ? "Digite seu RA" : "Digite seu RE"
-                  }
+                  placeholder="Digite seu RA"
                   required
                   disabled={loading}
                   className="h-11"
@@ -250,66 +215,17 @@ const StudentSignup = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-cargo" className="text-gray-700">
-                  Cargo *
-                </Label>
-                <Select
-                  value={cargo}
-                  onValueChange={(v) =>
-                    setCargo(v as "ADMINISTRADOR" | "USUARIO" | "FUNCIONARIO")
-                  }
-                  required
-                  disabled={loading}
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Selecione o cargo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FUNCIONARIO">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <UserCog className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium">Funcionário</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="USUARIO">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        <User className="h-4 w-4 text-green-600" />
-                        <span className="font-medium">Aluno</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="signup-curso" className="text-gray-700">
-                  Curso{" "}
-                  {cargo === "USUARIO" ? (
-                    <span className="text-red-500">*</span>
-                  ) : (
-                    <span className="text-gray-500">(para alunos)</span>
-                  )}
+                  Curso <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={curso}
                   onValueChange={setCurso}
-                  required={cargo === "USUARIO"}
-                  disabled={loading || cargo !== "USUARIO"}
+                  required
+                  disabled={loading}
                 >
-                  <SelectTrigger
-                    className={`h-11 ${
-                      cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
-                    }`}
-                  >
-                    <SelectValue
-                      placeholder={
-                        cargo === "USUARIO"
-                          ? "Selecione o curso"
-                          : "Apenas para alunos"
-                      }
-                    />
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Selecione o curso" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="tecnico-automacao">
@@ -343,64 +259,19 @@ const StudentSignup = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-turma" className="text-gray-700">
-                  Código da Turma{" "}
-                  {cargo === "USUARIO" ? (
-                    <span className="text-red-500">*</span>
-                  ) : (
-                    <span className="text-gray-400 text-xs">(para alunos)</span>
-                  )}
-                </Label>
-                <Input
-                  id="signup-turma"
-                  name="turma"
-                  type="text"
-                  placeholder="Ex: T2024-A1"
-                  required={cargo === "USUARIO"}
-                  disabled={loading || cargo !== "USUARIO"}
-                  value={turma}
-                  onChange={(e) => setTurma(e.target.value)}
-                  className={`h-11 ${
-                    cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
-                  }`}
-                />
-                {cargo === "USUARIO" && (
-                  <p className="text-xs text-muted-foreground">
-                    Campo obrigatório para alunos
-                  </p>
-                )}
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-periodo" className="text-gray-700">
-                  Período{" "}
-                  {cargo === "USUARIO" ? (
-                    <span className="text-red-500">*</span>
-                  ) : (
-                    <span className="text-gray-400 text-xs">(para alunos)</span>
-                  )}
+                  Período <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={periodo}
                   onValueChange={setPeriodo}
-                  required={cargo === "USUARIO"}
-                  disabled={loading || cargo !== "USUARIO"}
+                  required
+                  disabled={loading}
                 >
-                  <SelectTrigger
-                    className={`h-11 ${
-                      cargo !== "USUARIO" ? "opacity-50 bg-gray-50" : ""
-                    }`}
-                  >
-                    <SelectValue
-                      placeholder={
-                        cargo === "USUARIO"
-                          ? "Selecione o período"
-                          : "Apenas para alunos"
-                      }
-                    />
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Selecione o período" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="matutino">Matutino</SelectItem>
@@ -409,12 +280,27 @@ const StudentSignup = () => {
                     <SelectItem value="integral">Integral</SelectItem>
                   </SelectContent>
                 </Select>
-                {cargo === "USUARIO" && (
-                  <p className="text-xs text-muted-foreground">
-                    Campo obrigatório para alunos
-                  </p>
-                )}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="signup-turma" className="text-gray-700">
+                Código da Turma <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="signup-turma"
+                name="turma"
+                type="text"
+                placeholder="Ex: T2024-A1"
+                required
+                disabled={loading}
+                value={turma}
+                onChange={(e) => setTurma(e.target.value)}
+                className="h-11"
+              />
+              <p className="text-xs text-muted-foreground">
+                Campo obrigatório para alunos
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

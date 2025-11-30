@@ -11,6 +11,37 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    if (body.cargo && body.cargo !== "USUARIO") {
+      return NextResponse.json(
+        {
+          error:
+            "Apenas alunos podem se cadastrar pela página pública. Funcionários devem ser cadastrados pelo painel administrativo.",
+        },
+        { status: 403 }
+      );
+    }
+
+    body.cargo = "USUARIO";
+
+    if (!body.curso || String(body.curso).trim() === "") {
+      return NextResponse.json(
+        { error: "Curso é obrigatório para alunos" },
+        { status: 400 }
+      );
+    }
+    if (!body.periodo || String(body.periodo).trim() === "") {
+      return NextResponse.json(
+        { error: "Período é obrigatório para alunos" },
+        { status: 400 }
+      );
+    }
+    if (!body.turma || String(body.turma).trim() === "") {
+      return NextResponse.json(
+        { error: "Turma é obrigatória para alunos" },
+        { status: 400 }
+      );
+    }
+
     const validation = validateRequestBody(CreateUserSchema, body);
     if (!validation.success) return validation.response;
 
