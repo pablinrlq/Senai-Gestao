@@ -371,6 +371,7 @@ export const POST = withFirebaseAdmin(async (req, db) => {
 
         const payload: Record<string, unknown> = {
           id_usuario: authResult.uid,
+          owner_id: authResult.uid,
           data_inicio: validatedData.data_inicio,
           data_fim: dataFim,
           motivo: validatedData.motivo,
