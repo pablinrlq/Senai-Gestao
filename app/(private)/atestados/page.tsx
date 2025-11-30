@@ -81,8 +81,11 @@ export default function AtestadosPage() {
 
       const data = await response.json();
 
-      if (data.user?.tipo_usuario === "administrador") {
-        router.push("/dashboard");
+      if (
+        data.user?.tipo_usuario === "administrador" ||
+        data.user?.tipo_usuario === "funcionario"
+      ) {
+        router.push("/admin/atestados");
         return;
       }
 
@@ -220,7 +223,11 @@ export default function AtestadosPage() {
     }
   };
 
-  if (!profile || profile.tipo_usuario === "administrador") {
+  if (
+    !profile ||
+    profile.tipo_usuario === "administrador" ||
+    profile.tipo_usuario === "funcionario"
+  ) {
     return null;
   }
 
