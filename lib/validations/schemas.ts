@@ -54,9 +54,10 @@ export const AtestadoSchema = z.object({
   motivo: z.string().min(5, "Motivo deve ter pelo menos 5 caracteres"),
   imagem_atestado: z.string().optional().default(""),
   status: z
-    .enum(["pendente", "aprovado", "rejeitado"], {
+    .enum(["pendente", "aprovado_pedagogia", "aprovado", "rejeitado"], {
       errorMap: () => ({
-        message: "Status deve ser pendente, aprovado ou rejeitado",
+        message:
+          "Status deve ser pendente, aprovado_pedagogia, aprovado ou rejeitado",
       }),
     })
     .default("pendente"),
@@ -80,9 +81,10 @@ const CreateAtestadoBaseSchema = z.object({
     .max(365, "Período de afastamento não pode exceder 365 dias"),
   motivo: z.string().optional().default(""),
   status: z
-    .enum(["pendente", "aprovado", "rejeitado"], {
+    .enum(["pendente", "aprovado_pedagogia", "aprovado", "rejeitado"], {
       errorMap: () => ({
-        message: "Status deve ser pendente, aprovado ou rejeitado",
+        message:
+          "Status deve ser pendente, aprovado_pedagogia, aprovado ou rejeitado",
       }),
     })
     .default("pendente"),
@@ -152,9 +154,10 @@ export const CreateAtestadoWithUserSchema = CreateAtestadoBaseSchema.extend({
 );
 
 export const UpdateAtestadoStatusSchema = z.object({
-  status: z.enum(["pendente", "aprovado", "rejeitado"], {
+  status: z.enum(["pendente", "aprovado_pedagogia", "aprovado", "rejeitado"], {
     errorMap: () => ({
-      message: "Status deve ser pendente, aprovado ou rejeitado",
+      message:
+        "Status deve ser pendente, aprovado_pedagogia, aprovado ou rejeitado",
     }),
   }),
 });

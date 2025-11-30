@@ -35,7 +35,10 @@ export async function PATCH(
 
     const { status, observacoes_admin } = await req.json();
 
-    if (!status || !["aprovado", "rejeitado"].includes(status)) {
+    if (
+      !status ||
+      !["aprovado_pedagogia", "aprovado", "rejeitado"].includes(status)
+    ) {
       return NextResponse.json({ error: "Status inválido" }, { status: 400 });
     }
 
@@ -59,10 +62,44 @@ export async function PATCH(
       );
     }
 
+    const atestadoData = atestadoDoc.data();
+    const currentStatus = atestadoData?.status;
+
+    if (status === "aprovado" && currentStatus !== "aprovado_pedagogia") {
+      return NextResponse.json(
+        {
+          error:
+            "O atestado deve ser aprovado pela pedagogia antes da secretaria",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (status === "aprovado_pedagogia" && currentStatus !== "pendente") {
+      return NextResponse.json(
+        {
+          error:
+            "Apenas atestados pendentes podem ser aprovados pela pedagogia",
+        },
+        { status: 400 }
+      );
+    }
+
     const payload: Record<string, unknown> = {
       status,
       updated_at: new Date().toISOString(),
     };
+
+    if (status === "aprovado_pedagogia") {
+      payload.aprovado_pedagogia_por = decodedToken.uid;
+      payload.aprovado_pedagogia_em = new Date().toISOString();
+    } else if (status === "aprovado") {
+      payload.aprovado_secretaria_por = decodedToken.uid;
+      payload.aprovado_secretaria_em = new Date().toISOString();
+    } else if (status === "rejeitado") {
+      payload.rejeitado_por = decodedToken.uid;
+      payload.rejeitado_em = new Date().toISOString();
+    }
 
     if (observacoes_admin && typeof observacoes_admin === "string") {
       payload.observacoes_admin = observacoes_admin.trim();
