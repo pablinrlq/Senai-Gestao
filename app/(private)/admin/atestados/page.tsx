@@ -51,10 +51,19 @@ interface AtestadoData {
   data_fim: string;
   periodo_afastamento?: number | null;
   motivo: string;
-  status: "pendente" | "aprovado_pedagogia" | "aprovado" | "rejeitado";
+  status:
+    | "pendente"
+    | "aprovado_pedagogia"
+    | "aprovado_secretaria"
+    | "aprovado"
+    | "rejeitado";
   imagem: string;
   createdAt: string;
   observacoes_admin?: string;
+  aprovado_pedagogia_por?: string | null;
+  aprovado_pedagogia_em?: string | null;
+  aprovado_secretaria_por?: string | null;
+  aprovado_secretaria_em?: string | null;
   usuario: {
     id: string;
     nome: string;
@@ -179,7 +188,16 @@ export default function AdminAtestadosPage() {
     }
 
     if (statusFilter && statusFilter !== "__all__") {
-      filtered = filtered.filter((a) => a.status === statusFilter);
+      filtered = filtered.filter((a) => {
+        if (statusFilter === "pendente") {
+          return (
+            a.status === "pendente" ||
+            a.status === "aprovado_pedagogia" ||
+            a.status === "aprovado_secretaria"
+          );
+        }
+        return a.status === statusFilter;
+      });
     }
 
     if (searchQuery.trim()) {
@@ -199,7 +217,11 @@ export default function AdminAtestadosPage() {
 
   const handleReviewAtestado = async (
     atestadoId: string,
-    novoStatus: "aprovado_pedagogia" | "aprovado" | "rejeitado"
+    novoStatus:
+      | "aprovado_pedagogia"
+      | "aprovado_secretaria"
+      | "aprovado"
+      | "rejeitado"
   ) => {
     try {
       const token = localStorage.getItem("token");
@@ -221,9 +243,10 @@ export default function AdminAtestadosPage() {
       );
 
       if (response.ok) {
-        const statusLabels = {
+        const statusLabels: Record<string, string> = {
           aprovado_pedagogia: "aprovado pela pedagogia",
-          aprovado: "aprovado pela secretaria",
+          aprovado_secretaria: "aprovado pela secretaria",
+          aprovado: "aprovado (completo)",
           rejeitado: "rejeitado",
         };
         toast.success(`Atestado ${statusLabels[novoStatus]} com sucesso!`);
@@ -241,21 +264,47 @@ export default function AdminAtestadosPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pendente":
-        return (
+  const getStatusBadges = (atestado: AtestadoData) => {
+    const badges = [];
+
+    if (atestado.status === "aprovado") {
+      badges.push(
+        <Badge
+          key="aprovado"
+          variant="outline"
+          className="bg-green-50 text-green-700 border-green-200"
+        >
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Aprovado - Completo
+        </Badge>
+      );
+    } else if (atestado.status === "rejeitado") {
+      badges.push(
+        <Badge
+          key="rejeitado"
+          variant="outline"
+          className="bg-red-50 text-red-700 border-red-200"
+        >
+          <XCircle className="w-3 h-3 mr-1" />
+          Rejeitado
+        </Badge>
+      );
+    } else {
+      badges.push(
+        <Badge
+          key="pendente"
+          variant="outline"
+          className="bg-yellow-50 text-yellow-700 border-yellow-200"
+        >
+          <Clock className="w-3 h-3 mr-1" />
+          Pendente
+        </Badge>
+      );
+
+      if (atestado.aprovado_pedagogia_por) {
+        badges.push(
           <Badge
-            variant="outline"
-            className="bg-yellow-50 text-yellow-700 border-yellow-200"
-          >
-            <Clock className="w-3 h-3 mr-1" />
-            Pendente
-          </Badge>
-        );
-      case "aprovado_pedagogia":
-        return (
-          <Badge
+            key="pedagogia"
             variant="outline"
             className="bg-blue-50 text-blue-700 border-blue-200"
           >
@@ -263,29 +312,23 @@ export default function AdminAtestadosPage() {
             Aprovado - Pedagogia
           </Badge>
         );
-      case "aprovado":
-        return (
+      }
+
+      if (atestado.aprovado_secretaria_por) {
+        badges.push(
           <Badge
+            key="secretaria"
             variant="outline"
-            className="bg-green-50 text-green-700 border-green-200"
+            className="bg-teal-50 text-teal-700 border-teal-200"
           >
             <CheckCircle className="w-3 h-3 mr-1" />
-            Aprovado - Completo
+            Aprovado - Secretaria
           </Badge>
         );
-      case "rejeitado":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-red-50 text-red-700 border-red-200"
-          >
-            <XCircle className="w-3 h-3 mr-1" />
-            Rejeitado
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+      }
     }
+
+    return <div className="flex flex-wrap gap-2">{badges}</div>;
   };
 
   const toYMD = (v?: string | null) => {
@@ -420,6 +463,12 @@ export default function AdminAtestadosPage() {
                           Aprovado - Pedagogia
                         </div>
                       </SelectItem>
+                      <SelectItem value="aprovado_secretaria">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-3 h-3 text-teal-600" />
+                          Aprovado - Secretaria
+                        </div>
+                      </SelectItem>
                       <SelectItem value="aprovado">
                         <div className="flex items-center gap-2">
                           <CheckCircle className="w-3 h-3 text-green-600" />
@@ -526,7 +575,7 @@ export default function AdminAtestadosPage() {
                         )}
                       </CardDescription>
                     </div>
-                    {getStatusBadge(atestado.status)}
+                    {getStatusBadges(atestado)}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -665,251 +714,196 @@ export default function AdminAtestadosPage() {
                       </Button>
                     )}
 
-                    {atestado.status === "pendente" && (
-                      <>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Aprovar (Pedagogia)
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>
-                                Aprovar Atestado - Pedagogia
-                              </DialogTitle>
-                              <DialogDescription>
-                                Você está aprovando o atestado de{" "}
-                                {atestado.usuario?.nome} pela pedagogia
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="observacoes-pedagogia">
-                                  Observações (opcional)
-                                </Label>
-                                <Textarea
-                                  id="observacoes-pedagogia"
-                                  placeholder="Adicione observações sobre a aprovação pela pedagogia..."
-                                  value={observacoes}
-                                  onChange={(e) =>
-                                    setObservacoes(e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <DialogClose asChild>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setObservacoes("");
-                                    }}
-                                  >
-                                    Cancelar
-                                  </Button>
-                                </DialogClose>
+                    {atestado.status !== "rejeitado" &&
+                      atestado.status !== "aprovado" && (
+                        <div className="flex items-center gap-2">
+                          {!atestado.aprovado_pedagogia_por && (
+                            <Dialog>
+                              <DialogTrigger asChild>
                                 <Button
+                                  size="sm"
                                   className="bg-blue-600 hover:bg-blue-700"
-                                  onClick={() =>
-                                    handleReviewAtestado(
-                                      atestado.id,
-                                      "aprovado_pedagogia"
-                                    )
-                                  }
                                 >
-                                  Confirmar Aprovação
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Aprovar (Pedagogia)
                                 </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>
+                                    Aprovar Atestado - Pedagogia
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Você está aprovando o atestado de{" "}
+                                    {atestado.usuario?.nome} pela pedagogia
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div>
+                                    <Label htmlFor="observacoes-pedagogia">
+                                      Observações (opcional)
+                                    </Label>
+                                    <Textarea
+                                      id="observacoes-pedagogia"
+                                      placeholder="Adicione observações sobre a aprovação pela pedagogia..."
+                                      value={observacoes}
+                                      onChange={(e) =>
+                                        setObservacoes(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="flex justify-end gap-2">
+                                    <DialogClose asChild>
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                          setObservacoes("");
+                                        }}
+                                      >
+                                        Cancelar
+                                      </Button>
+                                    </DialogClose>
+                                    <Button
+                                      className="bg-blue-600 hover:bg-blue-700"
+                                      onClick={() =>
+                                        handleReviewAtestado(
+                                          atestado.id,
+                                          "aprovado_pedagogia"
+                                        )
+                                      }
+                                    >
+                                      Confirmar Aprovação
+                                    </Button>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
 
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Rejeitar
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Rejeitar Atestado</DialogTitle>
-                              <DialogDescription>
-                                Você está rejeitando o atestado de{" "}
-                                {atestado.usuario?.nome}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="observacoes-rejeicao">
-                                  Motivo da Rejeição *
-                                </Label>
-                                <Textarea
-                                  id="observacoes-rejeicao"
-                                  placeholder="Explique o motivo da rejeição..."
-                                  value={observacoes}
-                                  onChange={(e) =>
-                                    setObservacoes(e.target.value)
-                                  }
-                                  required
-                                />
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <DialogClose asChild>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setObservacoes("");
-                                    }}
-                                  >
-                                    Cancelar
-                                  </Button>
-                                </DialogClose>
+                          {!atestado.aprovado_secretaria_por && (
+                            <Dialog>
+                              <DialogTrigger asChild>
                                 <Button
-                                  variant="destructive"
-                                  disabled={!observacoes.trim()}
-                                  onClick={() =>
-                                    handleReviewAtestado(
-                                      atestado.id,
-                                      "rejeitado"
-                                    )
-                                  }
-                                >
-                                  Confirmar Rejeição
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </>
-                    )}
-
-                    {atestado.status === "aprovado_pedagogia" && (
-                      <>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Aprovar (Secretaria)
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>
-                                Aprovar Atestado - Secretaria
-                              </DialogTitle>
-                              <DialogDescription>
-                                Você está dando aprovação final pela secretaria
-                                ao atestado de {atestado.usuario?.nome}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="observacoes-secretaria">
-                                  Observações (opcional)
-                                </Label>
-                                <Textarea
-                                  id="observacoes-secretaria"
-                                  placeholder="Adicione observações sobre a aprovação pela secretaria..."
-                                  value={observacoes}
-                                  onChange={(e) =>
-                                    setObservacoes(e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <DialogClose asChild>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setObservacoes("");
-                                    }}
-                                  >
-                                    Cancelar
-                                  </Button>
-                                </DialogClose>
-                                <Button
+                                  size="sm"
                                   className="bg-green-600 hover:bg-green-700"
-                                  onClick={() =>
-                                    handleReviewAtestado(
-                                      atestado.id,
-                                      "aprovado"
-                                    )
-                                  }
                                 >
-                                  Confirmar Aprovação Final
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Aprovar (Secretaria)
                                 </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>
+                                    Aprovar Atestado - Secretaria
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Você está dando aprovação final pela
+                                    secretaria ao atestado de{" "}
+                                    {atestado.usuario?.nome}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div>
+                                    <Label htmlFor="observacoes-secretaria">
+                                      Observações (opcional)
+                                    </Label>
+                                    <Textarea
+                                      id="observacoes-secretaria"
+                                      placeholder="Adicione observações sobre a aprovação pela secretaria..."
+                                      value={observacoes}
+                                      onChange={(e) =>
+                                        setObservacoes(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="flex justify-end gap-2">
+                                    <DialogClose asChild>
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                          setObservacoes("");
+                                        }}
+                                      >
+                                        Cancelar
+                                      </Button>
+                                    </DialogClose>
+                                    <Button
+                                      className="bg-green-600 hover:bg-green-700"
+                                      onClick={() =>
+                                        handleReviewAtestado(
+                                          atestado.id,
+                                          "aprovado_secretaria"
+                                        )
+                                      }
+                                    >
+                                      Confirmar Aprovação
+                                    </Button>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
 
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Rejeitar
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Rejeitar Atestado</DialogTitle>
-                              <DialogDescription>
-                                Você está rejeitando o atestado de{" "}
-                                {atestado.usuario?.nome}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="observacoes-rejeicao-sec">
-                                  Motivo da Rejeição *
-                                </Label>
-                                <Textarea
-                                  id="observacoes-rejeicao-sec"
-                                  placeholder="Explique o motivo da rejeição..."
-                                  value={observacoes}
-                                  onChange={(e) =>
-                                    setObservacoes(e.target.value)
-                                  }
-                                  required
-                                />
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <DialogClose asChild>
+                          {/* Rejeitar */}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Rejeitar
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Rejeitar Atestado</DialogTitle>
+                                <DialogDescription>
+                                  Você está rejeitando o atestado de{" "}
+                                  {atestado.usuario?.nome}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="observacoes-rejeicao">
+                                    Motivo da Rejeição *
+                                  </Label>
+                                  <Textarea
+                                    id="observacoes-rejeicao"
+                                    placeholder="Explique o motivo da rejeição..."
+                                    value={observacoes}
+                                    onChange={(e) =>
+                                      setObservacoes(e.target.value)
+                                    }
+                                    required
+                                  />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                  <DialogClose asChild>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setObservacoes("");
+                                      }}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                  </DialogClose>
                                   <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setObservacoes("");
-                                    }}
+                                    variant="destructive"
+                                    disabled={!observacoes.trim()}
+                                    onClick={() =>
+                                      handleReviewAtestado(
+                                        atestado.id,
+                                        "rejeitado"
+                                      )
+                                    }
                                   >
-                                    Cancelar
+                                    Confirmar Rejeição
                                   </Button>
-                                </DialogClose>
-                                <Button
-                                  variant="destructive"
-                                  disabled={!observacoes.trim()}
-                                  onClick={() =>
-                                    handleReviewAtestado(
-                                      atestado.id,
-                                      "rejeitado"
-                                    )
-                                  }
-                                >
-                                  Confirmar Rejeição
-                                </Button>
+                                </div>
                               </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </>
-                    )}
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      )}
                   </div>
                 </CardContent>
               </Card>

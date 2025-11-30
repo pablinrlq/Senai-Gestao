@@ -54,12 +54,21 @@ export const AtestadoSchema = z.object({
   motivo: z.string().min(5, "Motivo deve ter pelo menos 5 caracteres"),
   imagem_atestado: z.string().optional().default(""),
   status: z
-    .enum(["pendente", "aprovado_pedagogia", "aprovado", "rejeitado"], {
-      errorMap: () => ({
-        message:
-          "Status deve ser pendente, aprovado_pedagogia, aprovado ou rejeitado",
-      }),
-    })
+    .enum(
+      [
+        "pendente",
+        "aprovado_pedagogia",
+        "aprovado_secretaria",
+        "aprovado",
+        "rejeitado",
+      ],
+      {
+        errorMap: () => ({
+          message:
+            "Status deve ser pendente, aprovado_pedagogia, aprovado_secretaria, aprovado ou rejeitado",
+        }),
+      }
+    )
     .default("pendente"),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
@@ -81,12 +90,21 @@ const CreateAtestadoBaseSchema = z.object({
     .max(365, "Período de afastamento não pode exceder 365 dias"),
   motivo: z.string().optional().default(""),
   status: z
-    .enum(["pendente", "aprovado_pedagogia", "aprovado", "rejeitado"], {
-      errorMap: () => ({
-        message:
-          "Status deve ser pendente, aprovado_pedagogia, aprovado ou rejeitado",
-      }),
-    })
+    .enum(
+      [
+        "pendente",
+        "aprovado_pedagogia",
+        "aprovado_secretaria",
+        "aprovado",
+        "rejeitado",
+      ],
+      {
+        errorMap: () => ({
+          message:
+            "Status deve ser pendente, aprovado_pedagogia, aprovado_secretaria, aprovado ou rejeitado",
+        }),
+      }
+    )
     .default("pendente"),
   imagem_atestado: z
     .union([z.instanceof(File), z.undefined()])
@@ -154,12 +172,21 @@ export const CreateAtestadoWithUserSchema = CreateAtestadoBaseSchema.extend({
 );
 
 export const UpdateAtestadoStatusSchema = z.object({
-  status: z.enum(["pendente", "aprovado_pedagogia", "aprovado", "rejeitado"], {
-    errorMap: () => ({
-      message:
-        "Status deve ser pendente, aprovado_pedagogia, aprovado ou rejeitado",
-    }),
-  }),
+  status: z.enum(
+    [
+      "pendente",
+      "aprovado_pedagogia",
+      "aprovado_secretaria",
+      "aprovado",
+      "rejeitado",
+    ],
+    {
+      errorMap: () => ({
+        message:
+          "Status deve ser pendente, aprovado_pedagogia, aprovado_secretaria, aprovado ou rejeitado",
+      }),
+    }
+  ),
 });
 
 export const LoginSchema = z.object({

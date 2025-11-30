@@ -32,6 +32,8 @@ interface Stats {
   atestadosPendentes: number;
   atestadosAprovados: number;
   atestadosRejeitados: number;
+  atestadosAprovPedagogia: number;
+  atestadosAprovSecretaria: number;
 }
 
 export default function Dashboard() {
@@ -44,6 +46,8 @@ export default function Dashboard() {
     atestadosPendentes: 0,
     atestadosAprovados: 0,
     atestadosRejeitados: 0,
+    atestadosAprovPedagogia: 0,
+    atestadosAprovSecretaria: 0,
   });
 
   const fetchProfile = useCallback(async () => {
@@ -122,13 +126,22 @@ export default function Dashboard() {
           ...prev,
           totalAtestados: atestados.length,
           atestadosPendentes: atestados.filter(
-            (a: { status: string }) => a.status === "pendente"
+            (a: { status: string }) =>
+              a.status === "pendente" ||
+              a.status === "aprovado_pedagogia" ||
+              a.status === "aprovado_secretaria"
           ).length,
           atestadosAprovados: atestados.filter(
             (a: { status: string }) => a.status === "aprovado"
           ).length,
           atestadosRejeitados: atestados.filter(
             (a: { status: string }) => a.status === "rejeitado"
+          ).length,
+          atestadosAprovPedagogia: atestados.filter(
+            (a: { status: string }) => a.status === "aprovado_pedagogia"
+          ).length,
+          atestadosAprovSecretaria: atestados.filter(
+            (a: { status: string }) => a.status === "aprovado_secretaria"
           ).length,
         }));
       }
@@ -220,6 +233,20 @@ export default function Dashboard() {
                 {stats.atestadosPendentes}
               </div>
               <p className="text-xs text-yellow-600">Aguardando sua revisão</p>
+              <div className="mt-3 flex gap-4">
+                <div className="text-xs">
+                  <p className="text-muted-foreground">Aprov. Pedagogia</p>
+                  <p className="font-semibold text-sm text-blue-700">
+                    {stats.atestadosAprovPedagogia}
+                  </p>
+                </div>
+                <div className="text-xs">
+                  <p className="text-muted-foreground">Aprov. Secretaria</p>
+                  <p className="font-semibold text-sm text-teal-700">
+                    {stats.atestadosAprovSecretaria}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

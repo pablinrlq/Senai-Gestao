@@ -37,7 +37,12 @@ export async function PATCH(
 
     if (
       !status ||
-      !["aprovado_pedagogia", "aprovado", "rejeitado"].includes(status)
+      ![
+        "aprovado_pedagogia",
+        "aprovado_secretaria",
+        "aprovado",
+        "rejeitado",
+      ].includes(status)
     ) {
       return NextResponse.json({ error: "Status inválido" }, { status: 400 });
     }
@@ -65,48 +70,114 @@ export async function PATCH(
     const atestadoData = atestadoDoc.data();
     const currentStatus = atestadoData?.status;
 
-    if (status === "aprovado" && currentStatus !== "aprovado_pedagogia") {
-      return NextResponse.json(
-        {
-          error:
-            "O atestado deve ser aprovado pela pedagogia antes da secretaria",
-        },
-        { status: 400 }
-      );
-    }
+    console.log("Current atestado data:", {
+      status: currentStatus,
+      aprovado_pedagogia_por: atestadoData?.aprovado_pedagogia_por,
+      aprovadoPedagogiaPor: atestadoData?.aprovadoPedagogiaPor,
+      aprovado_secretaria_por: atestadoData?.aprovado_secretaria_por,
+      aprovadoSecretariaPor: atestadoData?.aprovadoSecretariaPor,
+    });
 
-    if (status === "aprovado_pedagogia" && currentStatus !== "pendente") {
+    // New logic: allow pedagogia/secretaria approvals in any order.
+    // When both roles have approved, set final status to 'aprovado'.
+    if (currentStatus === "rejeitado") {
       return NextResponse.json(
-        {
-          error:
-            "Apenas atestados pendentes podem ser aprovados pela pedagogia",
-        },
+        { error: "Atestado já foi rejeitado e não pode ser alterado" },
         { status: 400 }
       );
     }
 
     const payload: Record<string, unknown> = {
-      status,
       updated_at: new Date().toISOString(),
     };
 
+    const existingPedagogia = Boolean(
+      atestadoData?.aprovado_pedagogia_por || atestadoData?.aprovadoPedagogiaPor
+    );
+    const existingSecretaria = Boolean(
+      atestadoData?.aprovado_secretaria_por ||
+        atestadoData?.aprovadoSecretariaPor
+    );
+
     if (status === "aprovado_pedagogia") {
-      payload.aprovado_pedagogia_por = decodedToken.uid;
-      payload.aprovado_pedagogia_em = new Date().toISOString();
+      if (!existingPedagogia) {
+        payload.aprovado_pedagogia_por = decodedToken.uid;
+        payload.aprovado_pedagogia_em = new Date().toISOString();
+      }
+    } else if (status === "aprovado_secretaria") {
+      if (!existingSecretaria) {
+        payload.aprovado_secretaria_por = decodedToken.uid;
+        payload.aprovado_secretaria_em = new Date().toISOString();
+      }
     } else if (status === "aprovado") {
-      payload.aprovado_secretaria_por = decodedToken.uid;
-      payload.aprovado_secretaria_em = new Date().toISOString();
+      // Backwards-compat: if client still sends 'aprovado', treat as secretaria approval
+      if (!existingSecretaria) {
+        payload.aprovado_secretaria_por = decodedToken.uid;
+        payload.aprovado_secretaria_em = new Date().toISOString();
+      }
     } else if (status === "rejeitado") {
       payload.rejeitado_por = decodedToken.uid;
       payload.rejeitado_em = new Date().toISOString();
     }
 
-    if (observacoes_admin && typeof observacoes_admin === "string") {
-      payload.observacoes_admin = observacoes_admin.trim();
+    // Determine final status after applying new flags
+    const willHavePedagogia =
+      existingPedagogia || Boolean(payload.aprovado_pedagogia_por);
+    const willHaveSecretaria =
+      existingSecretaria || Boolean(payload.aprovado_secretaria_por);
+
+    console.log("Approval check:", {
+      existingPedagogia,
+      existingSecretaria,
+      newPedagogia: Boolean(payload.aprovado_pedagogia_por),
+      newSecretaria: Boolean(payload.aprovado_secretaria_por),
+      willHavePedagogia,
+      willHaveSecretaria,
+    });
+
+    if (payload.rejeitado_por) {
+      payload.status = "rejeitado";
+    } else if (willHavePedagogia && willHaveSecretaria) {
+      payload.status = "aprovado";
+      console.log("Setting status to APROVADO (complete)");
+    } else if (willHavePedagogia) {
+      payload.status = "aprovado_pedagogia";
+    } else if (willHaveSecretaria) {
+      payload.status = "aprovado_secretaria";
+    } else {
+      payload.status = atestadoData?.status || "pendente";
     }
+
+    let autoMessage = "";
+    if (status === "rejeitado") {
+      if (observacoes_admin && typeof observacoes_admin === "string") {
+        payload.observacoes_admin = observacoes_admin.trim();
+      }
+    } else {
+      if (willHavePedagogia && willHaveSecretaria) {
+        autoMessage = "Aprovado pela Pedagogia e Secretaria";
+      } else if (willHavePedagogia) {
+        autoMessage = "Aprovado pela Pedagogia";
+      } else if (willHaveSecretaria) {
+        autoMessage = "Aprovado pela Secretaria";
+      }
+
+      if (
+        observacoes_admin &&
+        typeof observacoes_admin === "string" &&
+        observacoes_admin.trim()
+      ) {
+        payload.observacoes_admin = `${autoMessage}\n\nObservações: ${observacoes_admin.trim()}`;
+      } else {
+        payload.observacoes_admin = autoMessage;
+      }
+    }
+
+    console.log("Final payload to update:", payload);
 
     try {
       await db.collection("atestados").doc(atestadoId).update(payload);
+      console.log("Update successful, new status:", payload.status);
     } catch (unknownErr) {
       const err = unknownErr as { code?: string; message?: string };
       console.error("Error updating atestado in review route:", err);

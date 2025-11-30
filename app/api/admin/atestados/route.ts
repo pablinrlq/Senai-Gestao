@@ -93,6 +93,23 @@ export async function GET(req: NextRequest) {
           getString(atestadoData.observacoes_admin) ||
           "";
 
+        const aprovado_pedagogia_por =
+          getString(atestadoData.aprovado_pedagogia_por) ||
+          getString(atestadoData.aprovadoPedagogiaPor) ||
+          null;
+        const aprovado_pedagogia_em =
+          getString(atestadoData.aprovado_pedagogia_em) ||
+          getString(atestadoData.aprovadoPedagogiaEm) ||
+          null;
+        const aprovado_secretaria_por =
+          getString(atestadoData.aprovado_secretaria_por) ||
+          getString(atestadoData.aprovadoSecretariaPor) ||
+          null;
+        const aprovado_secretaria_em =
+          getString(atestadoData.aprovado_secretaria_em) ||
+          getString(atestadoData.aprovadoSecretariaEm) ||
+          null;
+
         return {
           id: doc.id,
           data_inicio: dataInicio,
@@ -102,6 +119,10 @@ export async function GET(req: NextRequest) {
           imagem,
           createdAt,
           observacoes_admin,
+          aprovado_pedagogia_por,
+          aprovado_pedagogia_em,
+          aprovado_secretaria_por,
+          aprovado_secretaria_em,
           usuario,
         };
       })
