@@ -188,7 +188,16 @@ export default function AdminAtestadosPage() {
     }
 
     if (statusFilter && statusFilter !== "__all__") {
-      filtered = filtered.filter((a) => a.status === statusFilter);
+      filtered = filtered.filter((a) => {
+        if (statusFilter === "pendente") {
+          return (
+            a.status === "pendente" ||
+            a.status === "aprovado_pedagogia" ||
+            a.status === "aprovado_secretaria"
+          );
+        }
+        return a.status === statusFilter;
+      });
     }
 
     if (searchQuery.trim()) {

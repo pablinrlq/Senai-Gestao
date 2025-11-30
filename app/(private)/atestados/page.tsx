@@ -498,7 +498,7 @@ export default function AtestadosPage() {
           </div>
         )}
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="bg-linear-to-br from-yellow-50 to-orange-50 border-yellow-200 hover:shadow-lg transition-all duration-300">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
@@ -506,45 +506,42 @@ export default function AtestadosPage() {
                 <div>
                   <p className="text-sm font-medium">Pendentes</p>
                   <p className="text-2xl font-bold">
-                    {atestados.filter((a) => a.status === "pendente").length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-linear-to-br from-blue-50 to-cyan-50 border-blue-200 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-blue-600" />
-                <div>
-                  <p className="text-sm font-medium">Aprov. Pedagogia</p>
-                  <p className="text-2xl font-bold">
-                    {
-                      atestados.filter((a) => a.status === "aprovado_pedagogia")
-                        .length
-                    }
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-linear-to-br from-teal-50 to-cyan-50 border-teal-200 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-teal-600" />
-                <div>
-                  <p className="text-sm font-medium">Aprov. Secretaria</p>
-                  <p className="text-2xl font-bold">
                     {
                       atestados.filter(
-                        (a) => a.status === "aprovado_secretaria"
+                        (a) =>
+                          a.status === "pendente" ||
+                          a.status === "aprovado_pedagogia" ||
+                          a.status === "aprovado_secretaria"
                       ).length
                     }
                   </p>
+                  <div className="mt-2 flex gap-3">
+                    <div className="text-xs">
+                      <p className="text-muted-foreground">Aprov. Pedagogia</p>
+                      <p className="font-semibold text-sm text-blue-700">
+                        {
+                          atestados.filter(
+                            (a) => a.status === "aprovado_pedagogia"
+                          ).length
+                        }
+                      </p>
+                    </div>
+                    <div className="text-xs">
+                      <p className="text-muted-foreground">Aprov. Secretaria</p>
+                      <p className="font-semibold text-sm text-teal-700">
+                        {
+                          atestados.filter(
+                            (a) => a.status === "aprovado_secretaria"
+                          ).length
+                        }
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+
           <Card className="bg-linear-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-all duration-300">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
