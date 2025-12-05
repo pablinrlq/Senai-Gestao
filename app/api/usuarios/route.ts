@@ -3,15 +3,23 @@ import { verifySessionToken, db } from "@/lib/firebase/admin";
 
 export async function GET(req: NextRequest) {
   try {
+    // Accept token from Authorization header or from HttpOnly cookie named 'session'
+    let token: string | null = null;
     const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    } else {
+      const cookieToken = req.cookies.get("session")?.value;
+      if (cookieToken) token = cookieToken;
+    }
+
+    if (!token) {
       return NextResponse.json(
         { error: "Token de autorização necessário" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.split(" ")[1];
     const decodedToken = await verifySessionToken(token);
 
     if (!decodedToken || !decodedToken.uid) {

@@ -65,7 +65,7 @@ export default function Usuarios() {
 
   const checkUserType = useCallback(async () => {
     try {
-      const response = await fetch("/api/profile");
+      const response = await fetch("/api/profile", { credentials: "include" });
 
       if (!response.ok) {
         throw new Error("Failed to check user type");
@@ -96,7 +96,7 @@ export default function Usuarios() {
 
   const fetchUsuarios = async () => {
     try {
-      const response = await fetch("/api/usuarios");
+      const response = await fetch("/api/usuarios", { credentials: "include" });
 
       if (response.ok) {
         const data = await response.json();
@@ -116,7 +116,9 @@ export default function Usuarios() {
   const fetchAtestadosUsuario = async (usuarioId: string) => {
     setSelectedUserId(usuarioId);
     try {
-      const response = await fetch(`/api/atestados?userId=${usuarioId}`);
+      const response = await fetch(`/api/atestados?userId=${usuarioId}`, {
+        credentials: "include",
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -179,6 +181,7 @@ export default function Usuarios() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ status: newStatus }),
       });
 

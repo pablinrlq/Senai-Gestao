@@ -17,15 +17,24 @@ export async function verifyAuth(request: Request): Promise<AuthResult> {
 
   console.log("Authorization Header:", authHeader);
 
-  if (!authHeader?.startsWith("Bearer ")) {
+  let token: string | null = null;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split("Bearer ")[1];
+  } else {
+    // Fallback: try to extract 'session' cookie from Cookie header
+    const cookieHeader = request.headers.get("cookie") || "";
+    const match = cookieHeader.match(/(?:^|; )session=([^;]+)/);
+    if (match) token = decodeURIComponent(match[1]);
+  }
+
+  if (!token) {
     return {
       success: false,
       error: "Authorization header missing or malformed",
       status: 401,
     };
   }
-
-  const token = authHeader.split("Bearer ")[1];
 
   try {
     const jwtSecret = process.env.JWT_SECRET || "your-jwt-secret-key";
