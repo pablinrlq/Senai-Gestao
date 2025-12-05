@@ -6,6 +6,7 @@ import {
 import { CreateUserSchema } from "@/lib/validations/schemas";
 import { validateRequestBody } from "@/lib/validations/helpers";
 import { hashPassword, supabase } from "@/lib/firebase/admin";
+import { sanitizeString } from "@/lib/utils/sanitize";
 
 export const POST = withFirebaseAdmin(async (req, db) => {
   try {
@@ -86,17 +87,25 @@ export const POST = withFirebaseAdmin(async (req, db) => {
       const bodyUnknown = body as Record<string, unknown> | null;
       const userData: Record<string, unknown> = {
         id: uid,
-        nome: validatedData.nome,
+        nome: sanitizeString(validatedData.nome),
         email: validatedData.email,
         cargo: validatedData.cargo,
-        ...(validatedData.telefone ? { telefone: validatedData.telefone } : {}),
-        ...(validatedData.cargo === "USUARIO" ? { ra: validatedData.ra } : {}),
+        ...(validatedData.telefone
+          ? { telefone: sanitizeString(validatedData.telefone) }
+          : {}),
+        ...(validatedData.cargo === "USUARIO"
+          ? { ra: sanitizeString(validatedData.ra) }
+          : {}),
         senha: await hashPassword(validatedData.senha),
         status: validatedData.status || "ativo",
-        ...(validatedData.curso ? { curso: validatedData.curso } : {}),
-        ...(validatedData.turma ? { turma: validatedData.turma } : {}),
+        ...(validatedData.curso
+          ? { curso: sanitizeString(validatedData.curso) }
+          : {}),
+        ...(validatedData.turma
+          ? { turma: sanitizeString(validatedData.turma) }
+          : {}),
         ...(validatedData.cargo !== "USUARIO" && validatedData.ra
-          ? { registro_empregado: validatedData.ra }
+          ? { registro_empregado: sanitizeString(validatedData.ra) }
           : {}),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

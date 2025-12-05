@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
-import { setAuthToken } from "@/lib/utils/auth";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Email inválido"),
@@ -56,8 +55,16 @@ const Auth = () => {
         throw new Error(result.error || "Erro ao fazer login");
       }
 
-      if (result.token) {
-        setAuthToken(result.token);
+      // store token and user for parts of the app that still rely on localStorage
+      try {
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+        }
+        if (result.user) {
+          localStorage.setItem("user", JSON.stringify(result.user));
+        }
+      } catch (err) {
+        // ignore storage errors (e.g., private mode)
       }
 
       toast.success("Login realizado com sucesso!");

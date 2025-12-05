@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError, ZodSchema } from "zod";
+import { logger } from "@/lib/logger";
 
 export function validateRequestBody<T>(
   schema: ZodSchema<T>,
@@ -45,7 +46,7 @@ export function handleZodError(error: unknown): NextResponse {
     );
   }
 
-  console.error("Unexpected error:", error);
+  logger.error("Unexpected error:", error);
   return NextResponse.json(
     { error: "Erro interno do servidor" },
     { status: 500 }

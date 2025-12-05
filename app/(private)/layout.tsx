@@ -33,19 +33,9 @@ export default function PrivateLayout({
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        toast.error("Você precisa estar logado para acessar esta página");
-        router.push("/auth/login");
-        return;
-      }
-
       try {
         const response = await fetch("/api/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
         });
         if (!response.ok) {
           let body: unknown = null;
@@ -67,8 +57,6 @@ export default function PrivateLayout({
 
           if (response.status === 401) {
             console.warn("Unauthorized:", apiMessage);
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
             toast.error(apiMessage || "Sessão expirada. Faça login novamente.");
             router.push("/auth/login");
             setLoading(false);

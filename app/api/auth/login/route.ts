@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, supabase } from "@/lib/firebase/admin";
+import { logger } from "@/lib/logger";
 import { LoginSchema } from "@/lib/validations/schemas";
 import { ZodError } from "zod";
 
@@ -24,8 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     const validatedData = validationResult.data;
-
-    console.table(validatedData);
+    logger.debug("Login data validated for:", { email: validatedData.email });
 
     try {
       const credentials: { email: string; password: string } = {
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (profileError) {
-        console.error("Error fetching profile after sign-in:", profileError);
+        logger.error("Error fetching profile after sign-in:", profileError);
       }
 
       const token = await createSessionToken(userId);
@@ -66,15 +66,25 @@ export async function POST(req: NextRequest) {
       if (typeof safeProfileObj.senha !== "undefined")
         delete safeProfileObj.senha;
 
-      return NextResponse.json({
+      const res = NextResponse.json({
         success: true,
         message: "Login realizado com sucesso",
         user: safeProfileObj,
         token,
         supabaseSession: signInData?.session ?? null,
       });
+
+      res.cookies.set("session", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+
+      return res;
     } catch (err) {
-      console.error("Error during Supabase signIn:", err);
+      logger.error("Error during Supabase signIn:", err);
       return NextResponse.json(
         { error: "Erro interno do servidor" },
         { status: 500 }

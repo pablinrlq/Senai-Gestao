@@ -29,19 +29,8 @@ export default function Perfil() {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      router.push("/auth/login");
-      return;
-    }
-
     try {
-      const response = await fetch("/api/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch("/api/profile");
 
       if (!response.ok) {
         throw new Error("Failed to fetch profile");

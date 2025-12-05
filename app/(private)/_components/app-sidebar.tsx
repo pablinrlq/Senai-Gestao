@@ -74,6 +74,11 @@ export function AppSidebar({ userName, userEmail, role }: AppSidebarProps) {
   const pathname = usePathname();
 
   const handleSignOut = () => {
+    try {
+      fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      /* ignore */
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     toast.success("Logout realizado com sucesso");

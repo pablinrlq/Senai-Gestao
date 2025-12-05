@@ -1,4 +1,5 @@
 import * as jwt from "jsonwebtoken";
+import { logger } from "@/lib/logger";
 
 type AuthResult =
   | {
@@ -14,18 +15,26 @@ type AuthResult =
 
 export async function verifyAuth(request: Request): Promise<AuthResult> {
   const authHeader = request.headers.get("authorization");
+  logger.debug("Authorization Header:", authHeader);
 
-  console.log("Authorization Header:", authHeader);
+  let token: string | null = null;
 
-  if (!authHeader?.startsWith("Bearer ")) {
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split("Bearer ")[1];
+  } else {
+    // Fallback: try to extract 'session' cookie from Cookie header
+    const cookieHeader = request.headers.get("cookie") || "";
+    const match = cookieHeader.match(/(?:^|; )session=([^;]+)/);
+    if (match) token = decodeURIComponent(match[1]);
+  }
+
+  if (!token) {
     return {
       success: false,
       error: "Authorization header missing or malformed",
       status: 401,
     };
   }
-
-  const token = authHeader.split("Bearer ")[1];
 
   try {
     const jwtSecret = process.env.JWT_SECRET || "your-jwt-secret-key";

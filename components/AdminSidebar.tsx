@@ -67,6 +67,11 @@ export function AdminSidebar({ userName, userEmail }: AdminSidebarProps) {
   const { state } = useSidebar();
 
   const handleLogout = () => {
+    try {
+      fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      /* ignore */
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     toast.success("Logout realizado");

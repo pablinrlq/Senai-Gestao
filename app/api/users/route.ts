@@ -5,6 +5,7 @@ import {
 } from "@/lib/firebase/middleware";
 import { CreateUserSchema } from "@/lib/validations/schemas";
 import { validateRequestBody, handleZodError } from "@/lib/validations/helpers";
+import { sanitizeString } from "@/lib/utils/sanitize";
 
 export const GET = withFirebaseAdmin(async (req, db) => {
   const { data, error } = await safeFirestoreOperation(async () => {
@@ -48,23 +49,26 @@ export const POST = withFirebaseAdmin(async (req, db) => {
 
     const { data, error } = await safeFirestoreOperation(async () => {
       const payload: Record<string, unknown> = {
-        nome: validatedData.nome,
+        nome: sanitizeString(validatedData.nome),
         email: validatedData.email,
         cargo: validatedData.cargo,
-        telefone: validatedData.telefone,
+        telefone: sanitizeString(validatedData.telefone),
         senha: validatedData.senha,
         createdAt: new Date().toISOString(),
       };
 
       if (validatedData.cargo === "USUARIO") {
-        payload.ra = validatedData.ra;
+        payload.ra = sanitizeString(validatedData.ra);
       } else if (validatedData.ra) {
-        payload.registro_empregado = validatedData.ra;
+        payload.registro_empregado = sanitizeString(validatedData.ra);
       }
 
-      if (validatedData.curso) payload.curso = validatedData.curso;
-      if (validatedData.periodo) payload.periodo = validatedData.periodo;
-      if (validatedData.turma) payload.turma = validatedData.turma;
+      if (validatedData.curso)
+        payload.curso = sanitizeString(validatedData.curso);
+      if (validatedData.periodo)
+        payload.periodo = sanitizeString(validatedData.periodo);
+      if (validatedData.turma)
+        payload.turma = sanitizeString(validatedData.turma);
 
       const docRef = await db.collection("usuarios").add(payload);
       return { id: docRef.id };

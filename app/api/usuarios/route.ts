@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken, db } from "@/lib/firebase/admin";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
+    // Accept token from Authorization header or from HttpOnly cookie named 'session'
+    let token: string | null = null;
     const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    } else {
+      const cookieToken = req.cookies.get("session")?.value;
+      if (cookieToken) token = cookieToken;
+    }
+
+    if (!token) {
       return NextResponse.json(
         { error: "Token de autorização necessário" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.split(" ")[1];
     const decodedToken = await verifySessionToken(token);
 
     if (!decodedToken || !decodedToken.uid) {
@@ -68,7 +77,7 @@ export async function GET(req: NextRequest) {
       usuarios,
     });
   } catch (error) {
-    console.error("Error fetching usuarios:", error);
+    logger.error("Error fetching usuarios:", error);
     return NextResponse.json(
       { error: "Erro interno do servidor" },
       { status: 500 }
