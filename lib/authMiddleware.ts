@@ -1,4 +1,5 @@
 import * as jwt from "jsonwebtoken";
+import { logger } from "@/lib/logger";
 
 type AuthResult =
   | {
@@ -14,8 +15,7 @@ type AuthResult =
 
 export async function verifyAuth(request: Request): Promise<AuthResult> {
   const authHeader = request.headers.get("authorization");
-
-  console.log("Authorization Header:", authHeader);
+  logger.debug("Authorization Header:", authHeader);
 
   let token: string | null = null;
 

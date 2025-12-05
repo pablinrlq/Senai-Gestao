@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import argon2 from "argon2";
 import { sanitizeString } from "@/lib/utils/sanitize";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
@@ -58,11 +59,10 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (raErr) {
-      console.error(
+      logger.error(
         "Error checking RA uniqueness:",
         raErr instanceof Error ? raErr.message : raErr
       );
-      if (raErr instanceof Error && raErr.stack) console.error(raErr.stack);
       return NextResponse.json(
         { error: "Erro interno do servidor" },
         { status: 500 }
@@ -76,12 +76,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(
-      "Creating Supabase auth user for email:",
-      validatedData.email,
-      "ra:",
-      validatedData.ra
-    );
+    logger.info("Creating Supabase auth user for email", validatedData.email);
     const { data: createdUser, error: createUserError } =
       await supabase.auth.admin.createUser({
         email: validatedData.email,
@@ -90,14 +85,12 @@ export async function POST(req: Request) {
       });
 
     if (createUserError) {
-      console.error(
+      logger.error(
         "Supabase createUser error:",
         createUserError instanceof Error
           ? createUserError.message
           : createUserError
       );
-      if (createUserError instanceof Error && createUserError.stack)
-        console.error(createUserError.stack);
       let raExists = false;
       try {
         const { data: raRow2, error: raErr2 } = await supabase
@@ -110,18 +103,17 @@ export async function POST(req: Request) {
         if (raErr2) throw raErr2;
         if (raRow2) raExists = true;
       } catch (err) {
-        console.error(
+        logger.error(
           "Error checking RA uniqueness (supabase client):",
           err instanceof Error ? err.message : String(err)
         );
-        if (err instanceof Error && err.stack) console.error(err.stack);
         try {
           const restUrl = `${
             process.env.SUPABASE_URL
           }/rest/v1/usuarios?select=id&${uniqueField}=eq.${encodeURIComponent(
             validatedData.ra
           )}&limit=1`;
-          console.log("RA uniqueness: using REST fallback to", restUrl);
+          logger.debug("RA uniqueness: using REST fallback");
           const res = await fetch(restUrl, {
             headers: {
               apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
@@ -135,12 +127,10 @@ export async function POST(req: Request) {
           const json = await res.json();
           if (Array.isArray(json) && json.length > 0) raExists = true;
         } catch (restErr) {
-          console.error(
+          logger.error(
             "Error checking RA uniqueness (REST fallback):",
             restErr instanceof Error ? restErr.message : String(restErr)
           );
-          if (restErr instanceof Error && restErr.stack)
-            console.error(restErr.stack);
           return NextResponse.json(
             { error: "Erro interno do servidor" },
             { status: 500 }
@@ -198,7 +188,7 @@ export async function POST(req: Request) {
       const hashed = await argon2.hash(validatedData.senha);
       profile.senha = hashed;
     } catch (hashErr) {
-      console.error(
+      logger.error(
         "Failed to hash password:",
         hashErr instanceof Error ? hashErr.message : String(hashErr)
       );
@@ -230,14 +220,14 @@ export async function POST(req: Request) {
 
     const removed = Object.keys(profile).filter((k) => !allowedCols.has(k));
     if (removed.length > 0) {
-      console.log("Removed unknown columns before insert:", removed);
+      logger.debug("Removed unknown columns before insert:", removed);
     }
 
     const { error: insertErr } = await supabase
       .from("usuarios")
       .insert([insertPayload]);
     if (insertErr) {
-      console.error("Error inserting profile:", insertErr);
+      logger.error("Error inserting profile:", insertErr);
       try {
         const logDir = path.join(process.cwd(), "logs");
         if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
@@ -249,12 +239,12 @@ export async function POST(req: Request) {
         };
         fs.appendFileSync(logFile, JSON.stringify(payload, null, 2) + "\n\n");
       } catch (fileErr) {
-        console.error("Failed to write signup error log:", fileErr);
+        logger.error("Failed to write signup error log:", fileErr);
       }
       try {
         await supabase.auth.admin.deleteUser(createdUser.user.id);
       } catch (delErr) {
-        console.error("Failed to rollback created auth user:", delErr);
+        logger.error("Failed to rollback created auth user:", delErr);
       }
       return NextResponse.json(
         { error: "Erro ao criar perfil do usuário" },
@@ -275,7 +265,7 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Signup error:", error);
+    logger.error("Signup error:", error);
     try {
       const logDir = path.join(process.cwd(), "logs");
       if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
@@ -283,7 +273,7 @@ export async function POST(req: Request) {
       const payload = { time: new Date().toISOString(), error };
       fs.appendFileSync(logFile, JSON.stringify(payload, null, 2) + "\n\n");
     } catch (fileErr) {
-      console.error("Failed to write signup error log (catch):", fileErr);
+      logger.error("Failed to write signup error log (catch):", fileErr);
     }
     return NextResponse.json(
       { error: "Erro interno do servidor" },

@@ -8,15 +8,23 @@ export async function PATCH(
 ) {
   try {
     const { id: atestadoId } = await params;
+    // accept token from Authorization header or HttpOnly cookie named 'session'
+    let token: string | null = null;
     const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    } else {
+      const cookieToken = req.cookies.get("session")?.value;
+      if (cookieToken) token = cookieToken;
+    }
+
+    if (!token) {
       return NextResponse.json(
         { error: "Token de autorização necessário" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.split(" ")[1];
     const decodedToken = await verifySessionToken(token);
 
     if (!decodedToken || !decodedToken.uid) {

@@ -1,4 +1,5 @@
 import { withFirebaseAdmin } from "@/lib/firebase/middleware";
+import { logger } from "@/lib/logger";
 
 export interface AuthUser {
   id: string;
@@ -77,13 +78,13 @@ export const verifyAuthToken = async (token: string): Promise<AuthResult> => {
 
           resolve({ success: true, user });
         } catch (error) {
-          console.error("Token verification error:", error);
+          logger.error("Token verification error:", error);
           resolve({ success: false, error: "Erro ao verificar token" });
         }
       })(new Request("http://localhost"));
     });
   } catch (error) {
-    console.error("Auth verification error:", error);
+    logger.error("Auth verification error:", error);
     return { success: false, error: "Erro de autenticação" };
   }
 };
