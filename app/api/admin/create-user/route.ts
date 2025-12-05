@@ -93,7 +93,9 @@ export const POST = withFirebaseAdmin(async (req, db) => {
         ...(validatedData.telefone
           ? { telefone: sanitizeString(validatedData.telefone) }
           : {}),
-        ...(validatedData.cargo === "USUARIO" ? { ra: validatedData.ra } : {}),
+        ...(validatedData.cargo === "USUARIO"
+          ? { ra: sanitizeString(validatedData.ra) }
+          : {}),
         senha: await hashPassword(validatedData.senha),
         status: validatedData.status || "ativo",
         ...(validatedData.curso
@@ -103,7 +105,7 @@ export const POST = withFirebaseAdmin(async (req, db) => {
           ? { turma: sanitizeString(validatedData.turma) }
           : {}),
         ...(validatedData.cargo !== "USUARIO" && validatedData.ra
-          ? { registro_empregado: validatedData.ra }
+          ? { registro_empregado: sanitizeString(validatedData.ra) }
           : {}),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

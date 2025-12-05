@@ -170,9 +170,9 @@ export async function POST(req: Request) {
     };
 
     if ((validatedData as any).cargo === "USUARIO") {
-      profile.ra = validatedData.ra;
+      profile.ra = sanitizeString(validatedData.ra);
     } else if (validatedData.ra) {
-      profile.registro_empregado = validatedData.ra;
+      profile.registro_empregado = sanitizeString(validatedData.ra);
     }
 
     if (validatedData.telefone) {

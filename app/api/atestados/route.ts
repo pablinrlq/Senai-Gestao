@@ -8,6 +8,7 @@ import {
   UpdateAtestadoStatusSchema,
   User,
 } from "@/lib/validations/schemas";
+import { sanitizeString } from "@/lib/utils/sanitize";
 import { ZodError } from "zod";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -374,7 +375,7 @@ export const POST = withFirebaseAdmin(async (req, db) => {
           owner_id: authResult.uid,
           data_inicio: validatedData.data_inicio,
           data_fim: dataFim,
-          motivo: validatedData.motivo,
+          motivo: sanitizeString(validatedData.motivo),
           imagem_atestado: imageUrl,
           imagem_path: imagePath,
           status: validatedData.status,

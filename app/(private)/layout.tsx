@@ -34,7 +34,9 @@ export default function PrivateLayout({
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch("/api/profile");
+        const response = await fetch("/api/profile", {
+          credentials: "include",
+        });
         if (!response.ok) {
           let body: unknown = null;
           try {

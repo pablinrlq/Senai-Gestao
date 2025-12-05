@@ -18,32 +18,22 @@ export function middleware(_req: NextRequest) {
     "max-age=63072000; includeSubDomains; preload"
   );
 
-  // generate 16 random bytes using Web Crypto (Edge runtime compatible)
-  const rand = globalThis.crypto.getRandomValues(new Uint8Array(16));
-  let s = "";
-  for (let i = 0; i < rand.length; i++) s += String.fromCharCode(rand[i]);
-  const nonce = globalThis.btoa(s);
-
+  // CSP configuration that allows Next.js to function properly
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'`,
+    // Allow scripts from self and unsafe-eval for Next.js development
+    // In production, Next.js uses 'unsafe-eval' for webpack and hydration
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data:",
+    "img-src 'self' data: blob: https:",
     "connect-src 'self' https:",
     "font-src 'self' data:",
     "object-src 'none'",
     "base-uri 'self'",
+    "form-action 'self'",
   ].join("; ");
 
   res.headers.set("Content-Security-Policy", csp);
-
-  res.cookies.set("csp-nonce", nonce, {
-    path: "/",
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: false,
-    maxAge: 60 * 5,
-  });
 
   return res;
 }

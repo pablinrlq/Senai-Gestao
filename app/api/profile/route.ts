@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifySessionToken, db } from "@/lib/firebase/admin";
+import { verifySessionToken, supabase } from "@/lib/firebase/admin";
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,16 +25,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    const userDoc = await db.collection("usuarios").doc(decodedToken.uid).get();
+    // Use Supabase instead of Firestore
+    const { data: userData, error: userError } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("id", decodedToken.uid)
+      .maybeSingle();
 
-    if (!userDoc.exists) {
+    if (userError || !userData) {
+      console.error("Error fetching user from Supabase:", userError);
       return NextResponse.json(
         { error: "Usuário não encontrado" },
         { status: 404 }
       );
     }
-
-    const userData = userDoc.data();
 
     const cargo = String(userData?.cargo || "").toUpperCase();
     let tipo_usuario = "aluno";
@@ -44,11 +48,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       user: {
-        id: userDoc.id,
-        email: userData?.email,
-        nome: userData?.nome,
+        id: userData.id,
+        email: userData.email,
+        nome: userData.nome,
         tipo_usuario,
-        ra_aluno: userData?.ra,
+        ra_aluno: userData.ra,
       },
     });
   } catch (error) {

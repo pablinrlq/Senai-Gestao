@@ -58,9 +58,9 @@ export const POST = withFirebaseAdmin(async (req, db) => {
       };
 
       if (validatedData.cargo === "USUARIO") {
-        payload.ra = validatedData.ra;
+        payload.ra = sanitizeString(validatedData.ra);
       } else if (validatedData.ra) {
-        payload.registro_empregado = validatedData.ra;
+        payload.registro_empregado = sanitizeString(validatedData.ra);
       }
 
       if (validatedData.curso)

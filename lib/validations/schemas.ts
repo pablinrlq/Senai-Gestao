@@ -2,20 +2,24 @@ import { z } from "zod";
 
 export const UserSchema = z.object({
   id: z.string(),
-  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("Email deve ter um formato válido"),
+  nome: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email é obrigatório")
+    .email("Email deve ter um formato válido"),
   cargo: z.enum(["ADMINISTRADOR", "USUARIO", "FUNCIONARIO"], {
     errorMap: () => ({
       message: "Cargo deve ser ADMINISTRADOR, USUARIO ou FUNCIONARIO",
     }),
   }),
-  telefone: z.string().optional(),
-  ra: z.string().min(5, "RA deve ter pelo menos 5 caracteres"),
+  telefone: z.string().trim().optional(),
+  ra: z.string().trim().min(5, "RA deve ter pelo menos 5 caracteres"),
   senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
-  curso: z.string().optional(),
-  periodo: z.string().optional(),
+  curso: z.string().trim().optional(),
+  periodo: z.string().trim().optional(),
 });
 
 export const CreateUserSchema = UserSchema.omit({
@@ -190,7 +194,11 @@ export const UpdateAtestadoStatusSchema = z.object({
 });
 
 export const LoginSchema = z.object({
-  email: z.string().email("Email deve ter um formato válido"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email é obrigatório")
+    .email("Email deve ter um formato válido"),
   senha: z.string().min(1, "Senha é obrigatória"),
 });
 
