@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateAtestado } from "@/hooks/use-create-atestado";
 import { apiExternal } from "@/hooks/api-external/axios-api";
+import { AxiosError } from "axios";
 
 interface Profile {
   nome: string;
@@ -183,8 +184,6 @@ export default function CriarAtestadoPage() {
         imagem_atestado: uploadedFile,
       };
 
-      await createAtestado(createData);
-
       // Criar FormData para o upload
       const uploadFormData = new FormData();
       uploadFormData.append("file", uploadedFile); // ou o nome do campo que seu backend espera
@@ -195,19 +194,21 @@ export default function CriarAtestadoPage() {
             "Content-Type": "multipart/form-data",
           },
         })
-        .then(() => {
-          //Caso for lidar com a resposta
+        .then(async () => {
+          await createAtestado(createData);
           toast.success("Imagem enviada com sucesso!");
+          toast.success("Atestado enviado com sucesso!");
+          router.push("/atestados");
         })
-        .catch(() => {
-          //Caso ocorra um erro
-          toast.success(
-            "Ocorreu um erro interno ao lidar com o arquivo enviado!",
-          );
+        .catch((e) => {
+          if (e instanceof AxiosError) {
+            if (e.response?.data.name === "FileError") {
+              toast.success(e.response.data.message);
+            }
+          } else {
+            toast.success("Ocorreu um erro interno");
+          }
         });
-
-      toast.success("Atestado enviado com sucesso!");
-      router.push("/atestados");
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
