@@ -425,7 +425,6 @@ export default function AdminDashboard() {
         url = URL.createObjectURL(blob);
         link.href = url;
         link.download = fileName;
-        document.body.append(link);
         link.click();
       } finally {
         if (link.parentNode) link.remove();
