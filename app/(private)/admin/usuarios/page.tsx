@@ -52,6 +52,21 @@ interface Atestado {
   created_at: string;
 }
 
+const ALLOWED_PROTOCOLS = new Set(["https:"]);
+
+const ALLOWED_HOSTS = (() => {
+  const hosts: string[] = [];
+  const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (supabase) {
+    try {
+      hosts.push(new URL(supabase).host);
+    } catch {
+      /* ignore malformed env */
+    }
+  }
+  return hosts;
+})();
+
 const sanitizeUrl = (value: string | null) => {
   if (!value) return null;
 
@@ -60,11 +75,13 @@ const sanitizeUrl = (value: string | null) => {
     const parsed = new URL(trimmed);
     const protocol = parsed.protocol.toLowerCase();
 
-    if (protocol === "http:" || protocol === "https:") {
-      return parsed.toString();
+    if (!ALLOWED_PROTOCOLS.has(protocol)) return null;
+
+    if (ALLOWED_HOSTS.length > 0 && !ALLOWED_HOSTS.includes(parsed.host)) {
+      return null;
     }
 
-    return null;
+    return parsed.toString();
   } catch {
     return null;
   }
