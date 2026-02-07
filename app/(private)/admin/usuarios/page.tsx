@@ -493,14 +493,26 @@ export default function Usuarios() {
                           <p className="text-sm">{atestado.motivo}</p>
                         )}
                         {safeUrl && (
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={safeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Ver Anexo
-                            </a>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              try {
+                                const newWindow = window.open(
+                                  safeUrl,
+                                  "_blank",
+                                  "noopener,noreferrer"
+                                );
+
+                                if (!newWindow) {
+                                  toast.error("Não foi possível abrir o anexo");
+                                }
+                              } catch {
+                                toast.error("Não foi possível abrir o anexo");
+                              }
+                            }}
+                          >
+                            Ver Anexo
                           </Button>
                         )}
                       </div>
