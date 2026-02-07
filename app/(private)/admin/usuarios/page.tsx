@@ -87,6 +87,24 @@ const sanitizeUrl = (value: string | null) => {
   }
 };
 
+const sanitizeFileName = (value: string) => {
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_.-]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const trimmed = normalized.slice(0, 150);
+  return trimmed || "arquivo";
+};
+
+const getSafeExtension = (blobType: string | undefined | null) => {
+  const candidate =
+    blobType?.split("/")[1]?.replace("jpeg", "jpg").replace("svg+xml", "svg") || "bin";
+  const normalized = candidate.toLowerCase();
+  return /^[a-z0-9]+$/.test(normalized) ? normalized : "bin";
+};
+
 export default function Usuarios() {
   const router = useRouter();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -496,16 +514,26 @@ export default function Usuarios() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
+                            onClick={async () => {
                               try {
-                                const newWindow = window.open(
-                                  safeUrl,
-                                  "_blank",
-                                  "noopener,noreferrer"
+                                const res = await fetch(safeUrl);
+                                if (!res.ok) throw new Error();
+                                const blob = await res.blob();
+                                const extension = getSafeExtension(blob.type);
+                                const baseName = sanitizeFileName(
+                                  `${atestado.data_inicio}_${atestado.data_fim}_${atestado.id}`
                                 );
-
-                                if (!newWindow) {
-                                  toast.error("Não foi possível abrir o anexo");
+                                const fileName = `${baseName}.${extension}`;
+                                const link = document.createElement("a");
+                                let url: string | null = null;
+                                try {
+                                  url = URL.createObjectURL(blob);
+                                  link.href = url;
+                                  link.download = fileName;
+                                  link.click();
+                                } finally {
+                                  if (link.parentNode) link.remove();
+                                  if (url) URL.revokeObjectURL(url);
                                 }
                               } catch {
                                 toast.error("Não foi possível abrir o anexo");
