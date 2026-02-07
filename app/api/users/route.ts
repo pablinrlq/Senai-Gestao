@@ -17,7 +17,10 @@ export const GET = withFirebaseAdmin(async (req, db) => {
   }, "Failed to fetch users");
 
   if (error) {
-    return NextResponse.json({ success: false, error }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Erro interno do servidor" },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ success: true, data });
@@ -75,7 +78,7 @@ export const POST = withFirebaseAdmin(async (req, db) => {
     }, "Failed to create user");
 
     if (error) {
-      return NextResponse.json({ error }, { status: 500 });
+      return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
     }
 
     return NextResponse.json(

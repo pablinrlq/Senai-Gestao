@@ -146,7 +146,7 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json(
-        { error: createUserError.message || "Erro ao criar usuário" },
+        { error: "Não foi possível criar o usuário" },
         { status: 400 }
       );
     }

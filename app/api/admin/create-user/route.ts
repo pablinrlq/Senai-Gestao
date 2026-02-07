@@ -76,7 +76,7 @@ export const POST = withFirebaseAdmin(async (req, db) => {
         createUserError
       );
       return NextResponse.json(
-        { error: createUserError.message || "Erro ao criar usuário no Auth" },
+        { error: "Não foi possível criar o usuário no Auth" },
         { status: 400 }
       );
     }
@@ -126,7 +126,7 @@ export const POST = withFirebaseAdmin(async (req, db) => {
         );
       }
 
-      return NextResponse.json({ error }, { status: 500 });
+      return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
     }
 
     const created = data as Record<string, unknown>;

@@ -223,7 +223,10 @@ export const GET = withFirebaseAdmin(async (req, db) => {
   }, "Falha ao buscar atestados");
 
   if (error)
-    return NextResponse.json({ success: false, error }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Erro interno do servidor" },
+      { status: 500 }
+    );
   return NextResponse.json({ success: true, ...data });
 });
 
@@ -397,7 +400,10 @@ export const POST = withFirebaseAdmin(async (req, db) => {
     );
 
     if (error)
-      return NextResponse.json({ success: false, error }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: "Erro interno do servidor" },
+        { status: 500 }
+      );
 
     return NextResponse.json(
       {
@@ -465,7 +471,8 @@ export const PATCH = withFirebaseAdmin(async (req, db) => {
       });
     }, "Falha ao atualizar status do atestado");
 
-    if (error) return NextResponse.json({ error }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
 
     return NextResponse.json({
       success: true,
