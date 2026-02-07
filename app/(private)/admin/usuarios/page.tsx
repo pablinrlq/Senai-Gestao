@@ -52,6 +52,24 @@ interface Atestado {
   created_at: string;
 }
 
+const sanitizeUrl = (value: string | null) => {
+  if (!value) return null;
+
+  try {
+    const trimmed = value.trim();
+    const parsed = new URL(trimmed);
+    const protocol = parsed.protocol.toLowerCase();
+
+    if (protocol === "http:" || protocol === "https:") {
+      return parsed.toString();
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 export default function Usuarios() {
   const router = useRouter();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -122,8 +140,6 @@ export default function Usuarios() {
 
       if (response.ok) {
         const data = await response.json();
-        // API may return atestados under `data` (server uses { success: true, data: [...] })
-        // or under `atestados` in some older responses. Support both.
         const atestadosArray = data.data || data.atestados || [];
         setAtestados(atestadosArray);
       } else {
@@ -172,8 +188,6 @@ export default function Usuarios() {
         </div>
       );
     }
-
-    // default mapping: 'usuario' or missing -> Aluno
     return (
       <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: '#e0f2f1', color: '#00695c', border: '1px solid #4db8ac' }}>
         Aluno
@@ -200,7 +214,6 @@ export default function Usuarios() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Falha ao atualizar status");
       toast.success(body.message || "Status atualizado");
-      // refresh list
       fetchUsuarios();
     } catch (err) {
       console.error("Error toggling user status:", err);
@@ -222,8 +235,6 @@ export default function Usuarios() {
         return <Badge variant="secondary">Pendente</Badge>;
     }
   };
-
-  // use shared date formatter from utils to ensure consistent local-date handling
 
   if (loading) {
     return (
@@ -271,7 +282,6 @@ export default function Usuarios() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Users list */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2" style={{ color: '#005ca4' }}>
@@ -424,7 +434,6 @@ export default function Usuarios() {
             </CardContent>
           </Card>
 
-          {/* User atestados */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2" style={{ color: '#005ca4' }}>
@@ -448,34 +457,38 @@ export default function Usuarios() {
                     Este usuário não possui atestados
                   </p>
                 ) : (
-                  atestados.map((atestado) => (
-                    <div
-                      key={atestado.id}
-                      className="border rounded-lg p-4 space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        {getStatusBadge(atestado.status)}
+                  atestados.map((atestado) => {
+                    const safeUrl = sanitizeUrl(atestado.arquivo_url);
+
+                    return (
+                      <div
+                        key={atestado.id}
+                        className="border rounded-lg p-4 space-y-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          {getStatusBadge(atestado.status)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Período: {formatDateForDisplay(atestado.data_inicio)}{" "}
+                          até {formatDateForDisplay(atestado.data_fim)}
+                        </p>
+                        {atestado.motivo && (
+                          <p className="text-sm">{atestado.motivo}</p>
+                        )}
+                        {safeUrl && (
+                          <Button variant="outline" size="sm" asChild>
+                            <a
+                              href={safeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Ver Anexo
+                            </a>
+                          </Button>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Período: {formatDateForDisplay(atestado.data_inicio)}{" "}
-                        até {formatDateForDisplay(atestado.data_fim)}
-                      </p>
-                      {atestado.motivo && (
-                        <p className="text-sm">{atestado.motivo}</p>
-                      )}
-                      {atestado.arquivo_url && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a
-                            href={atestado.arquivo_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Ver Anexo
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </CardContent>
