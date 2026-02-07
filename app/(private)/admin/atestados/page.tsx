@@ -79,6 +79,26 @@ interface Profile {
   tipo_usuario: string;
 }
 
+const sanitizeFileName = (value: string) => {
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_.-]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  const trimmed = normalized.slice(0, 150);
+  return trimmed || "download";
+};
+
+const getSafeExtension = (blobType: string | undefined | null) => {
+  const candidate =
+    blobType?.split("/")[1]?.replace("jpeg", "jpg").replace("svg+xml", "svg") || "bin";
+
+  const normalized = candidate.toLowerCase();
+  return /^[a-z0-9]+$/.test(normalized) ? normalized : "bin";
+};
+
 export default function AdminAtestadosPage() {
   const router = useRouter();
   const [atestados, setAtestados] = useState<AtestadoData[]>([]);
@@ -352,28 +372,25 @@ export default function AdminAtestadosPage() {
 
       const inicio = toYMD(atestado.data_inicio);
       const fim = toYMD(atestado.data_fim);
-      const nomeOrig = (atestado.usuario?.nome || profile?.nome || "atestado")
-        .trim()
-        .replace(/\s+/g, "_")
-        .replace(/[^a-zA-Z0-9_\-]/g, "");
-
-      let ext = "jpg";
-      if (blob.type) {
-        const parts = blob.type.split("/");
-        if (parts[1])
-          ext = parts[1].replace("jpeg", "jpg").replace("svg+xml", "svg");
-      }
-
-      const fileName = `${inicio}_${fim}_${nomeOrig}.${ext}`;
+      const baseName = sanitizeFileName(
+        `${inicio}_${fim}_${atestado.usuario?.nome || profile?.nome || "atestado"}`
+      );
+      const extension = getSafeExtension(blob.type);
+      const fileName = `${baseName}.${extension}`;
 
       const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      let url: string | null = null;
+
+      try {
+        url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = fileName;
+        document.body.append(link);
+        link.click();
+      } finally {
+        if (link.parentNode) link.remove();
+        if (url) URL.revokeObjectURL(url);
+      }
     } catch (err) {
       console.error("Erro ao baixar atestado:", err);
       toast.error("Erro ao baixar atestado");
