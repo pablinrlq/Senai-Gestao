@@ -22,7 +22,6 @@ export async function verifyAuth(request: Request): Promise<AuthResult> {
   if (authHeader && authHeader.startsWith("Bearer ")) {
     token = authHeader.split("Bearer ")[1];
   } else {
-    // Fallback: try to extract 'session' cookie from Cookie header
     const cookieHeader = request.headers.get("cookie") || "";
     const match = cookieHeader.match(/(?:^|; )session=([^;]+)/);
     if (match) token = decodeURIComponent(match[1]);
@@ -37,7 +36,11 @@ export async function verifyAuth(request: Request): Promise<AuthResult> {
   }
 
   try {
-    const jwtSecret = process.env.JWT_SECRET || "your-jwt-secret-key";
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET environment variable is not set");
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
 
     const decodedToken = jwt.verify(token, jwtSecret, {
       issuer: "atestado-stock-app",
